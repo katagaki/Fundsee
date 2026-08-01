@@ -54,18 +54,12 @@ struct MoreView: View {
                 }
 
                 Section("More.Section.Export") {
-                    Button {
+                    Button("More.ExportSpending") {
                         exportURL = try? CSVExporter.exportEntries(entries)
-                    } label: {
-                        SettingsLabel(title: "More.ExportSpending", systemImage: "square.and.arrow.up", color: .indigo)
                     }
-                    .tint(.primary)
-                    Button {
+                    Button("More.ExportTemplates") {
                         templatesExportURL = try? CSVExporter.exportTemplates(templates)
-                    } label: {
-                        SettingsLabel(title: "More.ExportTemplates", systemImage: "square.and.arrow.up.on.square", color: .purple)
                     }
-                    .tint(.primary)
                 }
             }
             .navigationTitle("More.Title")

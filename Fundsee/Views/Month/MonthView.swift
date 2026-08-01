@@ -10,6 +10,9 @@ struct MonthView: View {
 
     @State private var monthOffset = 0
     @State private var selectedWeekStart: Date?
+    @Namespace private var weekSelection
+
+    private static let selectionID = "MonthView.weekSelection"
 
     private var engine: BudgetEngine {
         BudgetEngine(templates: templates, overrides: overrides, entries: entries, settings: allSettings.first)
@@ -58,13 +61,8 @@ struct MonthView: View {
         let used = engine.spent(in: month)
         return Section {
             VStack(spacing: 12) {
-            BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"))
+            BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"), spendPalette: engine.spendPalette(in: month))
                 .frame(height: 200)
-            HStack {
-                StatBlock(title: "Stat.Budget", amount: budget)
-                StatBlock(title: "Stat.Used", amount: used)
-                StatBlock(title: "Stat.Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
-            }
             if engine.monthlyExtra > 0 {
                 ExtraBudgetCard(
                     title: "OverallBudgets.Monthly.Header",
@@ -92,74 +90,111 @@ struct MonthView: View {
         let shownWeekStart = shownWeek.start
 
         return Section {
-            VStack(spacing: 2) {
-                HStack(spacing: 0) {
+            // Spacing, insets and padding mirror the week strip in `WeekView`.
+            VStack(spacing: 0) {
+                HStack(spacing: 4) {
                     ForEach(Array(symbols.enumerated()), id: \.offset) { _, symbol in
                         Text(symbol)
-                            .font(.caption2.weight(.semibold))
+                            .font(.caption2)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity)
                     }
                 }
-                .padding(.bottom, 4)
+                // Matches the week pill's 4pt above its weekday label.
+                .padding(.top, 4)
+                .padding(.bottom, 2)
 
+                // Split rows so the capsule spans the numbers only, not the dots.
                 ForEach(weeks, id: \.start) { week in
-                    HStack(spacing: 0) {
-                        ForEach(engine.days(in: week), id: \.self) { day in
-                            dayCell(
-                                day,
-                                inMonth: Self.week(month, contains: day),
-                                engine: engine,
-                                today: today
-                            )
+                    let isSelected = week.start == shownWeekStart
+                    let days = engine.days(in: week)
+                    VStack(spacing: 6) {
+                        HStack(spacing: 4) {
+                            ForEach(days, id: \.self) { day in
+                                dayNumber(
+                                    day,
+                                    inMonth: Self.week(month, contains: day),
+                                    isSelected: isSelected,
+                                    today: today
+                                )
+                            }
+                        }
+                        // Inset to the day slots, and matched-geometry so it slides.
+                        .background {
+                            GeometryReader { proxy in
+                                let column = (proxy.size.width - 4 * 6) / 7
+                                if isSelected {
+                                    Capsule()
+                                        .fill(Color.accentColor)
+                                        .padding(.horizontal, max(0, (column - 36) / 2))
+                                        .matchedGeometryEffect(id: Self.selectionID, in: weekSelection)
+                                }
+                            }
+                        }
+                        HStack(spacing: 4) {
+                            ForEach(days, id: \.self) { day in
+                                dayDot(
+                                    day,
+                                    inMonth: Self.week(month, contains: day),
+                                    engine: engine,
+                                    today: today
+                                )
+                            }
                         }
                     }
-                    .background(
-                        Capsule()
-                            .fill(Color.accentColor.opacity(week.start == shownWeekStart ? 0.12 : 0))
-                    )
+                    .padding(.vertical, 4)
                     .contentShape(.rect)
                     .onTapGesture {
-                        withAnimation(.snappy) { selectedWeekStart = week.start }
+                        withAnimation(.standard) { selectedWeekStart = week.start }
                     }
                 }
             }
             .padding(.vertical, 6)
-            .padding(.horizontal, 16)
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets())
         }
     }
 
-    /// One calendar cell. Days spilling in from the neighboring month keep their
-    /// slot so the grid stays aligned, but render empty.
+    /// Neighboring-month days keep their slot but render empty.
+    /// Type scale and colors come from `WeekDayPill`.
     @ViewBuilder
-    private func dayCell(_ day: Date, inMonth: Bool, engine: BudgetEngine, today: Date) -> some View {
+    private func dayNumber(_ day: Date, inMonth: Bool, isSelected: Bool, today: Date) -> some View {
         Group {
             if inMonth {
-                VStack(spacing: 3) {
-                    // Bare number, not `.dateTime.day()`: that renders "1日" in
-                    // Japanese and "1일" in Korean, which is too wide for a grid cell.
-                    Text(Calendar.current.component(.day, from: day), format: .number.grouping(.never))
-                        .font(.caption.weight(day == today ? .heavy : .medium))
-                        .foregroundStyle(day == today ? Color.accentColor : .primary)
-                    Circle()
-                        .fill(
-                            dayColor(
-                                used: engine.spent(on: day),
-                                budget: engine.effectiveBudget(for: day),
-                                day: day,
-                                today: today
-                            )
-                        )
-                        .frame(width: 6, height: 6)
-                }
+                // Bare number, not `.dateTime.day()`: that renders "1日" in
+                // Japanese and "1일" in Korean, which is too wide for a grid cell.
+                Text(Calendar.current.component(.day, from: day), format: .number.grouping(.never))
+                    .font(.callout.weight(day == today || isSelected ? .bold : .regular))
+                    .foregroundStyle(isSelected ? Color.black : (day == today ? Color.accentColor : .primary))
             } else {
                 Color.clear
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 48)
+        .frame(height: 36)
+        .frame(maxWidth: .infinity)
+    }
+
+    @ViewBuilder
+    private func dayDot(_ day: Date, inMonth: Bool, engine: BudgetEngine, today: Date) -> some View {
+        Group {
+            if inMonth {
+                Circle()
+                    .fill(
+                        dayColor(
+                            used: engine.spent(on: day),
+                            budget: engine.effectiveBudget(for: day),
+                            day: day,
+                            today: today
+                        )
+                    )
+                    .frame(width: 5, height: 5)
+            } else {
+                Color.clear
+            }
+        }
+        .frame(height: 5)
+        .frame(maxWidth: .infinity)
     }
 
     private var selectedWeekSection: some View {
@@ -179,11 +214,6 @@ struct MonthView: View {
                         .contentTransition(.numericText())
                 }
                 UsageBar(used: used, budget: budget)
-                HStack {
-                    StatBlock(title: "Stat.Budget", amount: budget)
-                    StatBlock(title: "Stat.Used", amount: used)
-                    StatBlock(title: "Stat.Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
-                }
             }
             .padding(.vertical, 6)
         }

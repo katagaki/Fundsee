@@ -26,11 +26,7 @@ struct CategoryAmountRow: View {
                     .pickerStyle(.palette)
                 }
             } label: {
-                Image(systemName: category.iconName)
-                    .font(.system(size: 15))
-                    .symbolRenderingMode(.hierarchical)
-                    .foregroundStyle(category.iconColor)
-                    .frame(width: 32, height: 32)
+                RoundRectIcon(systemImage: category.iconName, color: category.iconColor)
             }
             TextField("Template.Field.Category", text: $category.name)
             Spacer()

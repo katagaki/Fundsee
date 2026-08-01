@@ -12,7 +12,11 @@ struct TemplatesEditorView: View {
                     TemplateDetailView(template: template)
                 } label: {
                     HStack {
-                        Label(template.name, systemImage: template.iconName)
+                        Label {
+                            Text(template.name)
+                        } icon: {
+                            RoundRectIcon(systemImage: template.iconName)
+                        }
                         Spacer()
                         Text(template.total.currencyString)
                             .foregroundStyle(.secondary)

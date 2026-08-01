@@ -65,13 +65,7 @@ struct WeekView: View {
             VStack(spacing: 12) {
             BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisWeek", defaultValue: "of \(budget.currencyString) this week"), carryover: carryover, spendPalette: engine.spendPalette(in: week))
                 .frame(height: 200)
-            if engine.weeklyExtra > 0 {
-                ExtraBudgetCard(
-                    title: "OverallBudgets.Weekly.Header",
-                    caption: "Week.Extra.Caption",
-                    amount: engine.weeklyExtra
-                )
-            }
+            ExtraBudgetCards(engine: engine, date: shownDay, namespace: cardZoom, inputCategory: $inputCategory)
             }
             .frame(maxWidth: .infinity)
         }

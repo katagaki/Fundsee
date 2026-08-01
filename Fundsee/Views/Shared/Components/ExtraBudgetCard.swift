@@ -1,32 +1,106 @@
 import SwiftUI
 
+/// Which overall budget a card stands for. The category name is what spending
+/// is recorded under, so it is translated once and then stored on the entry.
+enum ExtraBudgetKind: Hashable {
+    case weekly, monthly
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .weekly: "OverallBudgets.Weekly.Header"
+        case .monthly: "OverallBudgets.Monthly.Header"
+        }
+    }
+
+    var caption: LocalizedStringKey {
+        switch self {
+        case .weekly: "Week.Extra.Caption"
+        case .monthly: "Month.Extra.Caption"
+        }
+    }
+
+    var categoryName: String {
+        switch self {
+        case .weekly:
+            String(localized: "OverallBudgets.Weekly.Header", defaultValue: "Weekly Overall Budget")
+        case .monthly:
+            String(localized: "OverallBudgets.Monthly.Header", defaultValue: "Monthly Overall Budget")
+        }
+    }
+}
+
+/// The overall-budget cards for a day, shown only for the budgets that are set.
+/// Tapping one opens the spend sheet for that budget's category.
+struct ExtraBudgetCards: View {
+    let engine: BudgetEngine
+    let date: Date
+    let namespace: Namespace.ID
+    @Binding var inputCategory: String?
+    var kinds: [ExtraBudgetKind] = [.weekly, .monthly]
+
+    var body: some View {
+        VStack(spacing: 12) {
+            if kinds.contains(.weekly), engine.weeklyExtra > 0 {
+                card(.weekly, budget: engine.weeklyExtra, interval: engine.weekInterval(containing: date))
+            }
+            if kinds.contains(.monthly), engine.monthlyExtra > 0 {
+                card(.monthly, budget: engine.monthlyExtra, interval: engine.monthInterval(containing: date))
+            }
+        }
+    }
+
+    private func card(_ kind: ExtraBudgetKind, budget: Decimal, interval: DateInterval) -> some View {
+        let name = kind.categoryName
+        return ExtraBudgetCard(
+            kind: kind,
+            budget: budget,
+            used: engine.spent(in: interval, category: name)
+        ) {
+            inputCategory = name
+        }
+        .matchedTransitionSource(id: name, in: namespace)
+    }
+}
+
 /// The weekly or monthly overall budget, called out on its own so bulk buys do
-/// not read as part of the daily plan they are folded into.
+/// not read as part of the daily plan they are folded into. Tapping it records
+/// spending against that budget.
 struct ExtraBudgetCard: View {
-    var title: LocalizedStringKey
-    var caption: LocalizedStringKey
-    var amount: Decimal
+    var kind: ExtraBudgetKind
+    var budget: Decimal
+    var used: Decimal
+    var action: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "basket.fill")
-                .font(.title3)
-                .foregroundStyle(Color.accentColor)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                Text(caption)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+        Button(action: action) {
+            VStack(spacing: 10) {
+                HStack(spacing: 12) {
+                    RoundRectIcon(systemImage: "basket.fill")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(kind.title)
+                            .font(.subheadline.weight(.semibold))
+                        Text(kind.caption)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 12)
+                    Text(verbatim: "\(used.currencyString) / \(budget.currencyString)")
+                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .foregroundStyle(used > budget ? .red : .primary)
+                        .contentTransition(.numericText())
+                }
+                UsageBar(used: used, budget: budget)
             }
-            Spacer(minLength: 12)
-            Text(amount.currencyString)
-                .font(.system(.headline, design: .rounded))
-                .contentTransition(.numericText())
+            .padding(16)
+            .frame(maxWidth: .infinity)
+            .background(
+                Color.accentColor.opacity(colorScheme == .light ? 0.12 : 0.22),
+                in: .rect(cornerRadius: 24)
+            )
         }
-        .fundseeCard()
-        .shadow(color: colorScheme == .light ? .black.opacity(0.06) : .clear, radius: 8, y: 3)
+        .buttonStyle(.plain)
+        .shadow(color: colorScheme == .light ? Color.accentColor.opacity(0.2) : .clear, radius: 8, y: 3)
     }
 }

@@ -74,6 +74,10 @@ struct BudgetEngine {
         entries(in: interval).reduce(0) { $0 + $1.amount }
     }
 
+    func spent(in interval: DateInterval, category: String) -> Decimal {
+        entries(in: interval).filter { $0.categoryName == category }.reduce(0) { $0 + $1.amount }
+    }
+
     /// Spending split by category name, largest first.
     func spentByCategory(in interval: DateInterval) -> [(name: String, amount: Decimal)] {
         breakdown(of: entries(in: interval))

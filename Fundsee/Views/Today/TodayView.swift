@@ -22,6 +22,7 @@ struct TodayView: View {
             List {
                 ringSection
                 categoriesSection
+                extraBudgetsSection
                 changePlanSection
             }
             .listStyle(.plain)
@@ -105,6 +106,17 @@ struct TodayView: View {
                 )
             }
         }
+    }
+
+    private var extraBudgetsSection: some View {
+        Section {
+            ExtraBudgetCards(engine: engine, date: today, namespace: cardZoom, inputCategory: $inputCategory)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
     }
 
     private var changePlanSection: some View {

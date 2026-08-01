@@ -12,7 +12,9 @@ struct MonthView: View {
 
     @State private var monthOffset = 0
     @State private var selectedWeekStart: Date?
+    @State private var inputCategory: String?
     @Namespace private var weekSelection
+    @Namespace private var cardZoom
 
     private static let selectionID = "MonthView.weekSelection"
 
@@ -22,6 +24,14 @@ struct MonthView: View {
 
     private var referenceDate: Date {
         Calendar.current.date(byAdding: .month, value: monthOffset, to: .now) ?? .now
+    }
+
+    /// Spending recorded from this screen lands on today when the shown month
+    /// is the current one, and on the month's first day otherwise.
+    private var entryDate: Date {
+        let month = engine.monthInterval(containing: referenceDate)
+        let today = Calendar.current.startOfDay(for: .now)
+        return month.contains(today) && today < month.end ? today : month.start
     }
 
     private var shownWeek: DateInterval {
@@ -53,6 +63,14 @@ struct MonthView: View {
                     Button("Month.Next", systemImage: "chevron.right") { monthOffset += 1 }
                 }
             }
+            .sheet(item: $inputCategory) { category in
+                SpendInputSheet(
+                    date: entryDate,
+                    categoryName: category,
+                    recentAmounts: engine.recentAmounts(category: category)
+                )
+                .navigationTransition(.zoom(sourceID: category, in: cardZoom))
+            }
         }
     }
 
@@ -65,13 +83,13 @@ struct MonthView: View {
             VStack(spacing: 12) {
             BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"), spendPalette: engine.spendPalette(in: month))
                 .frame(height: 200)
-            if engine.monthlyExtra > 0 {
-                ExtraBudgetCard(
-                    title: "OverallBudgets.Monthly.Header",
-                    caption: "Month.Extra.Caption",
-                    amount: engine.monthlyExtra
-                )
-            }
+            ExtraBudgetCards(
+                engine: engine,
+                date: entryDate,
+                namespace: cardZoom,
+                inputCategory: $inputCategory,
+                kinds: [.monthly]
+            )
             }
             .frame(maxWidth: .infinity)
         }

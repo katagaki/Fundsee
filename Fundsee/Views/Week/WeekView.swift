@@ -70,9 +70,11 @@ struct WeekView: View {
                 StatBlock(title: "Stat.Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
             }
             if engine.weeklyExtra > 0 {
-                Text(String(localized: "Week.IncludesWeeklyExtra", defaultValue: "Includes \(engine.weeklyExtra.currencyString) weekly overall budget"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                ExtraBudgetCard(
+                    title: "OverallBudgets.Weekly.Header",
+                    caption: "Week.Extra.Caption",
+                    amount: engine.weeklyExtra
+                )
             }
             }
             .frame(maxWidth: .infinity)

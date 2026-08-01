@@ -22,6 +22,11 @@ struct OnboardingView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // The settings views embedded in the later steps set their own
+            // navigation titles for when they are pushed from More. Onboarding
+            // has its own headers, so clear the title the child propagated up.
+            .navigationTitle(Text(verbatim: ""))
+            .toolbarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) { bottomBar }
             .toolbar {
                 if step > 0 {
@@ -169,20 +174,6 @@ struct OnboardingView: View {
     }
 
     private func stepHeader(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 40))
-                .foregroundStyle(Color.accentColor)
-            Text(title)
-                .font(.system(size: 28, weight: .bold))
-                .multilineTextAlignment(.center)
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 36)
-        }
-        .padding(.top, 20)
-        .padding(.bottom, 4)
+        OnboardingStepHeader(icon: icon, title: title, subtitle: subtitle)
     }
 }

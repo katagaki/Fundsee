@@ -681,36 +681,36 @@
         }
       }
     },
-    "Month.IncludesMonthlyExtra": {
+    "Month.Extra.Caption": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Includes %@ monthly overall budget"
+            "value": "Included in this month's total"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "月間の全体予算%@を含みます"
+            "value": "今月の合計に含まれています"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "월간 전체 예산 %@ 포함"
+            "value": "이번 달 합계에 포함됨"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "含每月总预算 %@"
+            "value": "已计入本月合计"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "含每月總預算 %@"
+            "value": "已計入本月合計"
           }
         }
       }
@@ -4183,36 +4183,36 @@
         }
       }
     },
-    "Week.IncludesWeeklyExtra": {
+    "Week.Extra.Caption": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Includes %@ weekly overall budget"
+            "value": "Included in this week's total"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "週間の全体予算%@を含みます"
+            "value": "今週の合計に含まれています"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "주간 전체 예산 %@ 포함"
+            "value": "이번 주 합계에 포함됨"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "含每周总预算 %@"
+            "value": "已计入本周合计"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "含每週總預算 %@"
+            "value": "已計入本週合計"
           }
         }
       }

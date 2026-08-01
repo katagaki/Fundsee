@@ -6,20 +6,11 @@ struct OnboardingTemplatesStep: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 12) {
-                Image(systemName: AppSymbol.budgetTemplate)
-                    .font(.system(size: 40))
-                    .foregroundStyle(Color.accentColor)
-                Text("Onboarding.Templates.Title")
-                    .font(.system(size: 28, weight: .bold))
-                Text("Onboarding.Templates.Subtitle")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 36)
-            }
-            .padding(.top, 20)
-            .padding(.bottom, 4)
+            OnboardingStepHeader(
+                icon: AppSymbol.budgetTemplate,
+                title: "Onboarding.Templates.Title",
+                subtitle: "Onboarding.Templates.Subtitle"
+            )
 
             List {
                 ForEach(templates) { template in

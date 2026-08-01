@@ -66,9 +66,11 @@ struct MonthView: View {
                 StatBlock(title: "Stat.Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
             }
             if engine.monthlyExtra > 0 {
-                Text(String(localized: "Month.IncludesMonthlyExtra", defaultValue: "Includes \(engine.monthlyExtra.currencyString) monthly overall budget"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                ExtraBudgetCard(
+                    title: "OverallBudgets.Monthly.Header",
+                    caption: "Month.Extra.Caption",
+                    amount: engine.monthlyExtra
+                )
             }
             }
             .frame(maxWidth: .infinity)

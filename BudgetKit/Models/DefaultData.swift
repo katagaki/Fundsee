@@ -23,14 +23,15 @@ enum DefaultData {
     struct TemplateSeed {
         let name: String
         let iconName: String
-        let amounts: [Decimal]
     }
 
+    /// Seeded categories start at zero. The amounts are the whole point of the
+    /// app, so guessing them for the user would only be noise to clear out.
     static var templates: [TemplateSeed] {
         [
-            TemplateSeed(name: String(localized: "Seed.Template.Office", defaultValue: "Working from Office"), iconName: "building.2.fill", amounts: [6, 14, 16, 6, 5]),
-            TemplateSeed(name: String(localized: "Seed.Template.Home", defaultValue: "Working from Home"), iconName: "house.fill", amounts: [4, 9, 14, 3, 5]),
-            TemplateSeed(name: String(localized: "Seed.Template.NotWorking", defaultValue: "Not Working"), iconName: "sofa.fill", amounts: [6, 12, 16, 5, 12]),
+            TemplateSeed(name: String(localized: "Seed.Template.Office", defaultValue: "Working from Office"), iconName: "building.2.fill"),
+            TemplateSeed(name: String(localized: "Seed.Template.Home", defaultValue: "Working from Home"), iconName: "house.fill"),
+            TemplateSeed(name: String(localized: "Seed.Template.NotWorking", defaultValue: "Not Working"), iconName: "sofa.fill"),
         ]
     }
 
@@ -50,7 +51,7 @@ enum DefaultData {
                 let template = BudgetTemplate(name: seed.name, iconName: seed.iconName)
                 context.insert(template)
                 for (index, name) in names.enumerated() {
-                    let category = TemplateCategory(name: name, amount: seed.amounts[index], sortOrder: index, iconName: categoryIcons[index])
+                    let category = TemplateCategory(name: name, amount: 0, sortOrder: index, iconName: categoryIcons[index])
                     category.template = template
                     context.insert(category)
                 }
@@ -112,7 +113,10 @@ enum DefaultData {
                     // Skip the odd category so the data looks lived-in rather than mechanical.
                     if Int.random(in: 0..<10) == 0 { continue }
                     let factor = Double.random(in: 0.55...1.3)
-                    let total = (category.amount.doubleValue * factor).rounded()
+                    // Categories seed at zero, so fall back to a nominal amount
+                    // rather than filling four months with nothing.
+                    let base = category.amount > 0 ? category.amount.doubleValue : 10
+                    let total = (base * factor).rounded()
                     guard total > 0 else { continue }
                     let entry = SpendEntry(dayKey: day, categoryName: category.name, amount: Decimal(total))
                     let hour = 8 + category.sortOrder * 3

@@ -65,7 +65,6 @@ struct WeekView: View {
             VStack(spacing: 12) {
             BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisWeek", defaultValue: "of \(budget.currencyString) this week"), carryover: carryover, spendPalette: engine.spendPalette(in: week))
                 .frame(height: 200)
-            ExtraBudgetCards(engine: engine, date: shownDay, namespace: cardZoom, inputCategory: $inputCategory)
             }
             .frame(maxWidth: .infinity)
         }
@@ -146,6 +145,13 @@ struct WeekView: View {
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
             }
+
+            ExtraBudgetCards(engine: engine, date: shown, namespace: cardZoom, inputCategory: $inputCategory)
+                .padding(.horizontal, 16)
+                .padding(.top, 10)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets())
+                .listRowSeparator(.hidden)
             }
         }
     }

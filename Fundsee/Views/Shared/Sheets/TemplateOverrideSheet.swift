@@ -12,7 +12,7 @@ struct TemplateOverrideSheet: View {
     @Query private var overrides: [DayOverride]
     @Query private var allSettings: [PlanSettings]
 
-    @State private var date: Date = .now
+    private var date: Date { initialDate }
 
     private var engine: BudgetEngine {
         BudgetEngine(templates: templates, overrides: overrides, entries: [], settings: allSettings.first)
@@ -21,13 +21,6 @@ struct TemplateOverrideSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                DatePicker(
-                    "TemplateOverride.Day",
-                    selection: $date,
-                    in: Calendar.current.startOfDay(for: .now)...,
-                    displayedComponents: .date
-                )
-
                 Section("TemplateOverride.Section.Template") {
                     ForEach(templates.sorted(by: { $0.createdAt < $1.createdAt })) { template in
                         Button {
@@ -65,7 +58,6 @@ struct TemplateOverrideSheet: View {
                     Button(role: .confirm) { dismiss() }
                 }
             }
-            .onAppear { date = initialDate }
         }
         .presentationDetents([.medium, .large])
     }

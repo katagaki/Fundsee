@@ -27,6 +27,9 @@ struct BudgetRingView: View {
     /// Overall budgets folded into `used`/`budget`, each drawn as an inner arc.
     var extraArcs: [ExtraArc] = []
 
+    /// Launch with `-ringGuides YES` to overlay the ring's own circles in red.
+    private static let showsGuides = UserDefaults.standard.bool(forKey: "ringGuides")
+
     private var overBudget: Bool { used > budget }
     private var remaining: Decimal { budget - used }
 
@@ -73,6 +76,16 @@ struct BudgetRingView: View {
                 }
             }
             .rotationEffect(.degrees(-90))
+            .overlay {
+                if Self.showsGuides {
+                    // -ringGuides: outer edge, stroke centerline, inner edge.
+                    ZStack {
+                        Circle().stroke(Color.red, lineWidth: 0.5)
+                        Circle().inset(by: thickness / 2).stroke(Color.red, lineWidth: 0.5)
+                        Circle().inset(by: thickness).stroke(Color.red, lineWidth: 0.5)
+                    }
+                }
+            }
             .frame(width: size, height: size)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

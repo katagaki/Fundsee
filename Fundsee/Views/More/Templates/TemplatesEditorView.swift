@@ -5,6 +5,9 @@ struct TemplatesEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \BudgetTemplate.createdAt) private var templates: [BudgetTemplate]
 
+    /// Set when the plus button makes a plan, so its editor opens right away.
+    @State private var newTemplate: BudgetTemplate?
+
     var body: some View {
         List {
             ForEach(templates) { template in
@@ -43,8 +46,12 @@ struct TemplatesEditorView: View {
                         modelContext.insert(category)
                     }
                     try? modelContext.save()
+                    newTemplate = template
                 }
             }
+        }
+        .navigationDestination(item: $newTemplate) { template in
+            TemplateDetailView(template: template)
         }
     }
 }

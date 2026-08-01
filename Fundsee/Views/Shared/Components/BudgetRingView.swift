@@ -46,16 +46,12 @@ struct BudgetRingView: View {
 
             ZStack {
                 ForEach(Array(spans(cap: cap).enumerated()), id: \.offset) { _, span in
-                    // Rounded ends need room: a stretch shorter than its own caps
-                    // would swell into a floating dot, so those stay square.
-                    let lineCap: CGLineCap = span.end - span.start > 3 * cap ? .round : .butt
-
                     Circle()
                         .inset(by: thickness / 2)
                         .trim(from: span.start, to: span.end)
                         .stroke(
                             Color.gray.opacity(0.2),
-                            style: StrokeStyle(lineWidth: thickness, lineCap: lineCap)
+                            style: StrokeStyle(lineWidth: thickness, lineCap: .round)
                         )
 
                     if let carried = span.carried {
@@ -64,7 +60,7 @@ struct BudgetRingView: View {
                             .trim(from: carried, to: span.end)
                             .stroke(
                                 Color.accentColor.opacity(0.3),
-                                style: StrokeStyle(lineWidth: thickness, lineCap: lineCap)
+                                style: StrokeStyle(lineWidth: thickness, lineCap: .round)
                             )
                     }
 
@@ -72,13 +68,7 @@ struct BudgetRingView: View {
                         Circle()
                             .inset(by: thickness / 2)
                             .trim(from: span.start, to: filled)
-                            .stroke(
-                                span.style,
-                                style: StrokeStyle(
-                                    lineWidth: thickness,
-                                    lineCap: filled - span.start > 3 * cap ? .round : .butt
-                                )
-                            )
+                            .stroke(span.style, style: StrokeStyle(lineWidth: thickness, lineCap: .round))
                     }
                 }
             }
@@ -124,9 +114,19 @@ struct BudgetRingView: View {
         }
         guard !parts.isEmpty else { return [] }
 
-        let gap = parts.count > 1 ? 0.01 : 0
+        let gap = parts.count > 1 ? 0.012 : 0
         let available = 1 - gap * Double(parts.count)
-        let widths = parts.map { $0.budget.doubleValue / budget.doubleValue * available }
+        // Every stretch keeps its rounded ends, so each needs room for both caps
+        // plus a little body. Small budgets are held to that, and the room comes
+        // out of the larger stretches.
+        let minimum = min(available / Double(parts.count), 5 * cap)
+        var widths = parts.map { $0.budget.doubleValue / budget.doubleValue * available }
+        let owed = widths.reduce(0) { $0 + max(0, minimum - $1) }
+        let spare = widths.reduce(0) { $0 + max(0, $1 - minimum) }
+        if owed > 0, spare > 0 {
+            let shrink = (spare - owed) / spare
+            widths = widths.map { $0 < minimum ? minimum : minimum + ($0 - minimum) * shrink }
+        }
 
         var result: [Span] = []
         var cursor = gap / 2
@@ -135,12 +135,11 @@ struct BudgetRingView: View {
             let usedShare = min(1, max(0, part.used.doubleValue / part.budget.doubleValue))
             let carried = max(Decimal(0), min(part.carryover, part.budget - part.used))
 
-            // Rounded ends are drawn inside the stretch, so it still reads its
-            // own size; a stretch too short for them is drawn square instead.
-            let round = span > 3 * cap
-            let start = round ? cursor + cap : cursor
-            let end = round ? cursor + span - cap : cursor + span
-            let filled = usedShare > 0 ? max(start + 0.002, start + (end - start) * usedShare) : nil
+            // The rounded ends are drawn inside the stretch, so it still reads
+            // its own size rather than spilling into the gaps beside it.
+            let start = cursor + cap
+            let end = max(start, cursor + span - cap)
+            let filled = usedShare > 0 ? min(end, max(start, start + (end - start) * usedShare)) : nil
             let style: AnyShapeStyle
             if part.used > part.budget {
                 style = AnyShapeStyle(Color.red)

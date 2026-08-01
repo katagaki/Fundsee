@@ -1,8 +1,6 @@
 import Foundation
 import UserNotifications
 
-/// Schedules local daily / weekly / monthly report notifications.
-/// Content is refreshed with current numbers whenever the app comes to the foreground.
 @MainActor
 enum NotificationService {
     static let dailyID = "fundsee.report.daily"
@@ -38,7 +36,7 @@ enum NotificationService {
 
         if defaults.bool(forKey: "notifyWeekly") {
             var components = DateComponents()
-            components.weekday = 1 // Sunday
+            components.weekday = 1
             components.hour = 20
             let content = UNMutableNotificationContent()
             content.title = String(localized: "Notification.Weekly.Title", defaultValue: "Weekly Report")

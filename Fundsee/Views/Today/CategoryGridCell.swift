@@ -1,15 +1,11 @@
 import SwiftUI
 
-/// Category card: colored gradient tile whose background fills as the
-/// budget is used — the spent fraction is solid, the rest translucent.
 struct CategoryGridCell: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let category: TemplateCategory
     let used: Decimal
 
-    /// Light mode keeps the tiles pale, so white text washes out on them: the
-    /// label takes a darkened version of the category color instead.
     private var labelColor: Color {
         colorScheme == .light ? category.iconColor.mix(with: .black, by: 0.55) : .white
     }

@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Settings-app-style row label: white symbol on a colored rounded rectangle.
 struct SettingsLabel: View {
     let title: LocalizedStringKey
     let systemImage: String

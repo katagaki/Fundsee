@@ -26,16 +26,12 @@ struct MonthView: View {
         Calendar.current.date(byAdding: .month, value: monthOffset, to: .now) ?? .now
     }
 
-    /// Spending recorded from this screen lands on today when the shown month
-    /// is the current one, and on the month's first day otherwise.
     private var entryDate: Date {
         let month = engine.monthInterval(containing: referenceDate)
         let today = Calendar.current.startOfDay(for: .now)
         return month.contains(today) && today < month.end ? today : month.start
     }
 
-    /// One arc per overall budget the month includes: the monthly one, and the
-    /// weekly one totalled across the weeks that start in this month.
     private func monthExtraArcs(engine: BudgetEngine, month: DateInterval) -> [ExtraArc] {
         var arcs: [ExtraArc] = []
         if engine.monthlyExtra > 0 {
@@ -136,9 +132,6 @@ struct MonthView: View {
         .listRowSeparator(.hidden)
     }
 
-    /// Built eagerly, one row per week. A `LazyVGrid` here reports an unstable
-    /// height to the enclosing `List`, which blocks scrolling past the calendar
-    /// and makes the week band stutter as it moves.
     private var calendarSection: some View {
         let engine = self.engine
         let calendar = Calendar.current
@@ -149,7 +142,6 @@ struct MonthView: View {
         let shownWeekStart = shownWeek.start
 
         return Section {
-            // Spacing, insets and padding mirror the week strip in `WeekView`.
             VStack(spacing: 0) {
                 HStack(spacing: 4) {
                     ForEach(Array(symbols.enumerated()), id: \.offset) { _, symbol in
@@ -159,11 +151,9 @@ struct MonthView: View {
                             .frame(maxWidth: .infinity)
                     }
                 }
-                // Matches the week pill's 4pt above its weekday label.
                 .padding(.top, 4)
                 .padding(.bottom, 2)
 
-                // Split rows so the capsule spans the numbers only, not the dots.
                 ForEach(weeks, id: \.start) { week in
                     let isSelected = week.start == shownWeekStart
                     let days = engine.days(in: week)
@@ -178,7 +168,6 @@ struct MonthView: View {
                                 )
                             }
                         }
-                        // Inset to the day slots, and matched-geometry so it slides.
                         .background {
                             GeometryReader { proxy in
                                 let column = (proxy.size.width - 4 * 6) / 7
@@ -215,14 +204,10 @@ struct MonthView: View {
         }
     }
 
-    /// Neighboring-month days keep their slot but render empty.
-    /// Type scale and colors come from `WeekDayPill`.
     @ViewBuilder
     private func dayNumber(_ day: Date, inMonth: Bool, isSelected: Bool, today: Date) -> some View {
         Group {
             if inMonth {
-                // Bare number, not `.dateTime.day()`: that renders "1日" in
-                // Japanese and "1일" in Korean, which is too wide for a grid cell.
                 Text(Calendar.current.component(.day, from: day), format: .number.grouping(.never))
                     .font(.callout.weight(day == today || isSelected ? .bold : .regular))
                     .foregroundStyle(isSelected ? WeekDayPill.selectedForeground(colorScheme) : (day == today ? Color.accentColor : .primary))
@@ -321,8 +306,6 @@ struct MonthView: View {
         return (week.start..<lastDay).formatted(.interval.month(.abbreviated).day())
     }
 
-    /// `DateInterval.contains` includes the end boundary; that would leak
-    /// the next week's first day into the band.
     private static func week(_ week: DateInterval, contains day: Date) -> Bool {
         day >= week.start && day < week.end
     }

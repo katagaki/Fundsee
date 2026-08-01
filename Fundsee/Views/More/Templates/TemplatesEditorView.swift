@@ -5,7 +5,6 @@ struct TemplatesEditorView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \BudgetTemplate.createdAt) private var templates: [BudgetTemplate]
 
-    /// Set when the plus button makes a plan, so its editor opens right away.
     @State private var newTemplate: BudgetTemplate?
 
     var body: some View {

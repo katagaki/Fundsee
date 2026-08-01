@@ -1,7 +1,6 @@
 import SwiftData
 import SwiftUI
 
-/// Overrides the template used for a specific day (today or an upcoming day).
 struct TemplateOverrideSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext

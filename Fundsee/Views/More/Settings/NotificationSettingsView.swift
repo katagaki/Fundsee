@@ -2,8 +2,6 @@ import SwiftData
 import SwiftUI
 
 struct NotificationSettingsView: View {
-    /// Onboarding embeds this view under its own header, where the navigation
-    /// title it needs when pushed from More would read as a stray heading.
     var isEmbedded = false
 
     @AppStorage("notifyDaily") private var notifyDaily = false

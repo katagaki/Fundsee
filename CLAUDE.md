@@ -19,6 +19,7 @@ A visual budget management app for iOS 26.0+. Users define budget templates for 
 
 ## User preferences (established in review, keep them)
 
+- No comments in the source, including doc comments; write code that reads on its own instead. Anything genuinely non-obvious belongs in this file. `// MARK: -` section dividers are the one exception and stay.
 - No em-dashes in user-facing copy.
 - No status pills; convey state with progress bars and color.
 - Toolbar Cancel/Done are label-less `Button(role: .cancel)` / `Button(role: .confirm)`.

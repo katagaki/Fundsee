@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Small labeled amount used in summary rows.
 struct StatBlock: View {
     var title: LocalizedStringKey
     var amount: Decimal

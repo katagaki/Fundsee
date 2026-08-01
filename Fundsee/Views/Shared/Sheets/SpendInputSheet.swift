@@ -1,9 +1,6 @@
 import SwiftData
 import SwiftUI
 
-/// Records one expense against a category for a given day, and lists what is
-/// already recorded against that category so it can be corrected on the spot.
-/// Offers the last three distinct amounts entered for that category as one-tap chips.
 struct SpendInputSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -11,8 +8,6 @@ struct SpendInputSheet: View {
     let date: Date
     let categoryName: String
     let recentAmounts: [Decimal]
-    /// Which budget the entry counts against. Overall-budget spending is listed
-    /// for its whole week or month, since that is the period it is spread over.
     var scope: SpendScope = .day
     var period: DateInterval?
 

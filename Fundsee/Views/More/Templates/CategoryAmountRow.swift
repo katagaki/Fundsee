@@ -3,8 +3,6 @@ import SwiftUI
 struct CategoryAmountRow: View {
     @Bindable var category: TemplateCategory
 
-    /// A palette picker lays its items out in a single row, so the icons are
-    /// chunked into rows that fit a menu's width instead of overflowing.
     private static let iconRows: [[String]] = stride(from: 0, to: AppSymbol.categoryIcons.count, by: 5).map {
         Array(AppSymbol.categoryIcons[$0..<min($0 + 5, AppSymbol.categoryIcons.count)])
     }

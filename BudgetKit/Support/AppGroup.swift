@@ -12,7 +12,6 @@ enum AppGroup {
         PlanSettings.self,
     ])
 
-    /// Read-only container for extensions (widgets) — local store, no CloudKit.
     static func readOnlyContainer() throws -> ModelContainer {
         let configuration = ModelConfiguration(
             schema: schema,

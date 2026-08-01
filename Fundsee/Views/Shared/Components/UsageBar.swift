@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Horizontal used/budget bar for a single category or day.
 struct UsageBar: View {
     var used: Decimal
     var budget: Decimal

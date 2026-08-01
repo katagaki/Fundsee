@@ -2,8 +2,6 @@ import Foundation
 import SwiftData
 
 enum DefaultData {
-    /// Seeded names are stored in the database, so they are translated once at
-    /// creation time and then belong to the user like any name they typed.
     static var categoryNames: [String] {
         [
             String(localized: "Seed.Category.Breakfast", defaultValue: "Breakfast"),
@@ -14,8 +12,6 @@ enum DefaultData {
         ]
     }
 
-    /// The untranslated names seeded before this data was localized. Only the
-    /// icon backfill below needs them, and it has to match what is on disk.
     private static let originalCategoryNames = ["Breakfast", "Lunch", "Dinner", "Beverages", "Entertainment"]
 
     static let categoryIcons = ["sunrise.fill", "takeoutbag.and.cup.and.straw.fill", "fork.knife", "cup.and.saucer.fill", "gamecontroller.fill"]
@@ -25,8 +21,6 @@ enum DefaultData {
         let iconName: String
     }
 
-    /// Seeded categories start at zero. The amounts are the whole point of the
-    /// app, so guessing them for the user would only be noise to clear out.
     static var templates: [TemplateSeed] {
         [
             TemplateSeed(name: String(localized: "Seed.Template.Office", defaultValue: "Working from Office"), iconName: "building.2.fill"),
@@ -35,8 +29,6 @@ enum DefaultData {
         ]
     }
 
-    /// Indices into `templates` / `seeded`, used instead of matching on names
-    /// now that the names are translated.
     private enum Seed: Int {
         case office = 0, home = 1, notWorking = 2
     }
@@ -59,7 +51,6 @@ enum DefaultData {
             }
         }
 
-        // Backfill icons for categories created before the iconName field existed.
         let defaultIcons = Dictionary(uniqueKeysWithValues: zip(originalCategoryNames, categoryIcons))
         let allCategories = (try? context.fetch(FetchDescriptor<TemplateCategory>())) ?? []
         for category in allCategories where category.iconName == "tag.fill" {
@@ -74,27 +65,23 @@ enum DefaultData {
             if seeded.indices.contains(Seed.notWorking.rawValue) {
                 let office = seeded[Seed.office.rawValue]
                 let off = seeded[Seed.notWorking.rawValue]
-                settings.setTemplateUUID(off.uuid, forWeekday: 1)      // Sunday
-                for weekday in 2...6 {                                 // Monday–Friday
+                settings.setTemplateUUID(off.uuid, forWeekday: 1)
+                for weekday in 2...6 {
                     settings.setTemplateUUID(office.uuid, forWeekday: weekday)
                 }
-                settings.setTemplateUUID(off.uuid, forWeekday: 7)      // Saturday
+                settings.setTemplateUUID(off.uuid, forWeekday: 7)
             }
             context.insert(settings)
         }
         try? context.save()
     }
 
-    /// Sample-data amounts, keyed by icon because names are localized.
-    /// Ordered like `categoryNames`.
     private static let sampleAmounts: [String: [Decimal]] = [
         "building.2.fill": [8, 15, 20, 6, 5],
         "house.fill": [6, 8, 18, 4, 5],
         "sofa.fill": [7, 12, 22, 5, 15],
     ]
 
-    /// Debug helper (`-seedSampleData YES`): fills the past four months,
-    /// never touching today or days that already have entries.
     @MainActor
     static func seedSampleDataIfRequested(context: ModelContext) {
         guard UserDefaults.standard.bool(forKey: "seedSampleData") else { return }
@@ -102,7 +89,6 @@ enum DefaultData {
 
         let templates = (try? context.fetch(FetchDescriptor<BudgetTemplate>())) ?? []
 
-        // Only untouched amounts, so plans the user has priced keep their numbers.
         for template in templates {
             guard let amounts = sampleAmounts[template.iconName] else { continue }
             for category in template.sortedCategories where category.amount == 0 {
@@ -128,11 +114,8 @@ enum DefaultData {
             }
             if let template = engine.template(for: day) {
                 for category in template.sortedCategories {
-                    // Skip the odd category so the data looks lived-in rather than mechanical.
                     if Int.random(in: 0..<10) == 0 { continue }
                     let factor = Double.random(in: 0.55...1.3)
-                    // Categories seed at zero, so fall back to a nominal amount
-                    // rather than filling four months with nothing.
                     let base = category.amount > 0 ? category.amount.doubleValue : 10
                     let total = (base * factor).rounded()
                     guard total > 0 else { continue }

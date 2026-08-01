@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Icon, title, and subtitle shown above each onboarding step's content,
-/// left aligned and sitting close to the top of the screen.
 struct OnboardingStepHeader: View {
     let icon: String
     let title: LocalizedStringKey

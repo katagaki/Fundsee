@@ -1,9 +1,6 @@
 import Foundation
 import SwiftData
 
-// All properties have defaults and all relationships are optional,
-// as required for CloudKit-backed SwiftData stores.
-
 @Model
 final class BudgetTemplate {
     var uuid: String = UUID().uuidString

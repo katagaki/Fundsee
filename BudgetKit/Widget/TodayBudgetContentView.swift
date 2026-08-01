@@ -20,7 +20,6 @@ struct TodayBudgetContentView: View {
             Gauge(value: entry.fractionUsed) {
                 Image(systemName: "chart.pie.fill")
             } currentValueLabel: {
-                // The dial is tiny — a bare compact number fits where currency won't.
                 Text(
                     (entry.overBudget ? -entry.remaining : entry.remaining).doubleValue,
                     format: .number.notation(.compactName).precision(.significantDigits(2))

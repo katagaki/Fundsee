@@ -1,8 +1,6 @@
 import SwiftData
 import SwiftUI
 
-/// Guided first-run setup styled after Apple's own onboarding screens:
-/// a large centered title, feature rows, and a prominent bottom button.
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false

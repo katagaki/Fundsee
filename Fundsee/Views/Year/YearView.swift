@@ -46,7 +46,6 @@ struct YearView: View {
     private var yearSummarySection: some View {
         let engine = self.engine
         let today = Calendar.current.startOfDay(for: .now)
-        // The in-progress month only counts its budget up to today.
         let started = months.filter { engine.monthInterval(containing: $0).start <= today }
         let budget = started.reduce(Decimal(0)) { total, month in
             let interval = engine.monthInterval(containing: month)

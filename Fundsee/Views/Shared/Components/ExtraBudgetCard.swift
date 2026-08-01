@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Which overall budget a card stands for. The category name is what spending
-/// is recorded under, so it is translated once and then stored on the entry.
 enum ExtraBudgetKind: Hashable {
     case weekly, monthly
 
@@ -36,8 +34,6 @@ enum ExtraBudgetKind: Hashable {
     }
 }
 
-/// The overall-budget cards for a day, shown only for the budgets that are set.
-/// Tapping one opens the spend sheet for that budget's category.
 struct ExtraBudgetCards: View {
     let engine: BudgetEngine
     let date: Date
@@ -69,9 +65,6 @@ struct ExtraBudgetCards: View {
     }
 }
 
-/// The weekly or monthly overall budget, called out on its own so bulk buys do
-/// not read as part of the daily plan they are folded into. Tapping it records
-/// spending against that budget.
 struct ExtraBudgetCard: View {
     var kind: ExtraBudgetKind
     var budget: Decimal
@@ -101,8 +94,6 @@ struct ExtraBudgetCard: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity)
-            // The shadow belongs to the card's shape: on the whole button it
-            // would fall behind the translucent fill and ghost every glyph.
             .background {
                 RoundedRectangle(cornerRadius: 24)
                     .fill(Color.accentColor.opacity(colorScheme == .light ? 0.12 : 0.22))

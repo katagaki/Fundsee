@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// HIG system-color mapping for category symbols.
 enum CategoryIconPalette {
     static func color(for iconName: String) -> Color {
         switch iconName {

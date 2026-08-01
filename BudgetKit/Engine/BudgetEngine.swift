@@ -1,6 +1,5 @@
 import Foundation
 
-/// Pure calculation layer. Views build one from their queried data each render.
 struct BudgetEngine {
     var templates: [BudgetTemplate]
     var overrides: [DayOverride]
@@ -54,8 +53,6 @@ struct BudgetEngine {
 
     // MARK: - Spending
 
-    /// Only day-scoped entries: an overall-budget purchase is recorded on a day
-    /// but is not part of that day's plan.
     func entries(on date: Date) -> [SpendEntry] {
         entries.filter { $0.scope == .day && calendar.isDate($0.dayKey, inSameDayAs: date) }
     }
@@ -84,7 +81,6 @@ struct BudgetEngine {
         entries(in: interval).filter { $0.categoryName == category }.reduce(0) { $0 + $1.amount }
     }
 
-    /// Spending split by category name, largest first.
     func spentByCategory(in interval: DateInterval) -> [(name: String, amount: Decimal)] {
         breakdown(of: entries(in: interval))
     }
@@ -107,7 +103,6 @@ struct BudgetEngine {
             .sorted { ($0.amount, $1.name) > ($1.amount, $0.name) }
     }
 
-    /// The icon any template gives this category name.
     func categoryIconName(_ name: String) -> String? {
         for template in templates {
             if let match = template.sortedCategories.first(where: { $0.name == name }) {
@@ -134,9 +129,6 @@ struct BudgetEngine {
         template(for: date)?.total ?? 0
     }
 
-    /// The day's budget including next-day carryover when that behavior is active.
-    /// Carryover chains from the start of the week and resets at each week boundary:
-    /// effective(d) = Σ base(weekStart…d) − Σ spent(weekStart…d−1).
     func effectiveBudget(for date: Date) -> Decimal {
         let target = day(date)
         guard carryover == .nextDay else { return baseBudget(for: target) }
@@ -173,9 +165,6 @@ struct BudgetEngine {
         return base + monthlyExtra + weeklyExtra * Decimal(weekStarts.count)
     }
 
-    /// The month's budget counted only up to (and including) a reference day:
-    /// day budgets for elapsed days, the weekly extra per week already started,
-    /// and the monthly extra in full (it is granted at the start of the month).
     func monthBudgetToDate(containing date: Date, asOf reference: Date) -> Decimal {
         let month = monthInterval(containing: date)
         let cutoff = day(reference)
@@ -210,8 +199,6 @@ struct BudgetEngine {
         }
     }
 
-    /// Year view judgment. Past months compare totals; the current month
-    /// compares spend against the budget prorated to today.
     func status(forMonthContaining date: Date, today: Date = .now) -> MonthStatus {
         let month = monthInterval(containing: date)
         let now = day(today)
@@ -221,7 +208,6 @@ struct BudgetEngine {
         if month.end <= today {
             return used > budget ? .debt : (used < budget ? .surplus : .onTrack)
         }
-        // Current month: prorate.
         let allDays = days(in: month)
         let elapsed = allDays.filter { $0 <= now }
         guard !allDays.isEmpty else { return .onTrack }

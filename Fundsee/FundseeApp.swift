@@ -38,7 +38,6 @@ struct FundseeApp: App {
         do {
             return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
-            // CloudKit or the app group can be unavailable — fall back to a local store.
             let localConfiguration = ModelConfiguration(schema: schema, cloudKitDatabase: .none)
             do {
                 return try ModelContainer(for: schema, configurations: [localConfiguration])

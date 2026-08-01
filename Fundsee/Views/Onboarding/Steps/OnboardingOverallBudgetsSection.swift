@@ -2,7 +2,6 @@ import SwiftData
 import SwiftUI
 
 struct OnboardingOverallBudgetsSection: View {
-    /// Numeric placeholder, deliberately not localized.
     private static let zeroPlaceholder = "0"
 
     @Query private var allSettings: [PlanSettings]

@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Settings-app-style icon: white symbol on a filled rounded rectangle.
 struct RoundRectIcon: View {
     let systemImage: String
     var color: Color = .accentColor

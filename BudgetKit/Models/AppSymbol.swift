@@ -1,6 +1,5 @@
 import Foundation
 
-/// Shared SF Symbols so the same concept always gets the same glyph.
 enum AppSymbol {
     static let budgetTemplate = "square.grid.2x2.fill"
 

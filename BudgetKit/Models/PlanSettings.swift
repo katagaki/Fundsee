@@ -1,10 +1,8 @@
 import Foundation
 import SwiftData
 
-/// Singleton-ish plan configuration (first fetched record wins).
 @Model
 final class PlanSettings {
-    /// Template UUID per weekday, indexed by `Calendar` weekday − 1 (0 = Sunday … 6 = Saturday).
     var weekdayTemplateUUIDs: [String] = ["", "", "", "", "", "", ""]
     var weeklyOverallBudget: Decimal = 0
     var monthlyOverallBudget: Decimal = 0

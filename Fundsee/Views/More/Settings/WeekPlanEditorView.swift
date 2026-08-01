@@ -2,8 +2,6 @@ import SwiftData
 import SwiftUI
 
 struct WeekPlanEditorView: View {
-    /// Onboarding embeds this view under its own header, where the navigation
-    /// title it needs when pushed from More would read as a stray heading.
     var isEmbedded = false
 
     @Environment(\.modelContext) private var modelContext

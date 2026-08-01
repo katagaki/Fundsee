@@ -1,10 +1,8 @@
 import SwiftUI
 
-/// One pill of the horizontal week calendar: weekday, date, status dot.
 struct WeekDayPill: View {
     static let selectionID = "WeekDayPill.selection"
 
-    /// Reads on the accent-filled selection circle in either appearance.
     static func selectedForeground(_ colorScheme: ColorScheme) -> Color {
         colorScheme == .light ? .white : .black
     }

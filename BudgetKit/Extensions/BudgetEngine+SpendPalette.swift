@@ -1,8 +1,6 @@
 import SwiftUI
 
 extension BudgetEngine {
-    /// Category colors weighted by what was spent, largest share first. Overall
-    /// budgets are left out: they get their own arc rather than a slice here.
     func spendPalette(in interval: DateInterval) -> [SpendSlice] {
         palette(from: spentByCategory(in: interval, scope: .day))
     }

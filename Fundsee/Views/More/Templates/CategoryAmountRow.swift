@@ -10,7 +10,7 @@ struct CategoryAmountRow: View {
     }
 
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
             Menu {
                 ForEach(Array(Self.iconRows.enumerated()), id: \.offset) { index, row in
                     Picker(selection: $category.iconName) {

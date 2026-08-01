@@ -39,18 +39,29 @@ struct BudgetRingView: View {
             let size = min(proxy.size.width, proxy.size.height)
             let thickness = size * 0.14
 
+            // A round cap sticks out past the end of its arc by half the ring's
+            // width; measured as a fraction of the circle, that is how far each
+            // stroke is pulled in so the segment still reads its own size.
+            let cap = (thickness / 2) / (.pi * (size - thickness))
+
             ZStack {
-                ForEach(Array(spans.enumerated()), id: \.offset) { _, span in
+                ForEach(Array(spans(cap: cap).enumerated()), id: \.offset) { _, span in
                     Circle()
                         .inset(by: thickness / 2)
                         .trim(from: span.start, to: span.end)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: thickness)
+                        .stroke(
+                            Color.gray.opacity(0.2),
+                            style: StrokeStyle(lineWidth: thickness, lineCap: .round)
+                        )
 
                     if let carried = span.carried {
                         Circle()
                             .inset(by: thickness / 2)
                             .trim(from: carried, to: span.end)
-                            .stroke(Color.accentColor.opacity(0.3), lineWidth: thickness)
+                            .stroke(
+                                Color.accentColor.opacity(0.3),
+                                style: StrokeStyle(lineWidth: thickness, lineCap: .round)
+                            )
                     }
 
                     if let filled = span.filled {
@@ -88,7 +99,7 @@ struct BudgetRingView: View {
     /// The ring is divided by budget, not by spending: the daily plans take the
     /// first stretch, and each overall budget owns the stretch after it, past
     /// the plan's gray remainder. Every stretch fills from its own start.
-    private var spans: [Span] {
+    private func spans(cap: Double) -> [Span] {
         guard budget > 0 else { return [] }
 
         let extras = extraArcs.filter { $0.budget > 0 }
@@ -110,22 +121,28 @@ struct BudgetRingView: View {
         for part in parts {
             let span = part.budget.doubleValue * scale
             let usedShare = min(1, max(0, part.used.doubleValue / part.budget.doubleValue))
-            let filled = usedShare > 0 ? cursor + span * usedShare : nil
             let carried = max(Decimal(0), min(part.carryover, part.budget - part.used))
+
+            // Track ends, pulled in by the cap overhang. A stretch narrower than
+            // its own caps collapses to a dot at its middle.
+            let middle = cursor + span / 2
+            let start = min(cursor + cap, middle - 0.0005)
+            let end = max(cursor + span - cap, middle + 0.0005)
+            let filled = usedShare > 0 ? max(start, min(end, cursor + span * usedShare - cap)) : nil
             let style: AnyShapeStyle
             if part.used > part.budget {
                 style = AnyShapeStyle(Color.red)
             } else if let color = part.color {
                 style = AnyShapeStyle(color)
             } else {
-                style = spentStyle(from: cursor, to: filled ?? cursor + span)
+                style = spentStyle(from: start, to: filled ?? end)
             }
             result.append((
-                start: cursor,
-                end: cursor + span,
+                start: start,
+                end: end,
                 filled: filled,
                 carried: carried > 0
-                    ? cursor + span * (1 - carried.doubleValue / part.budget.doubleValue)
+                    ? max(start, min(end, cursor + span * (1 - carried.doubleValue / part.budget.doubleValue) - cap))
                     : nil,
                 style: style
             ))

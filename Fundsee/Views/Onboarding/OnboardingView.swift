@@ -22,10 +22,6 @@ struct OnboardingView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // The settings views embedded in the later steps set their own
-            // navigation titles for when they are pushed from More. Onboarding
-            // has its own headers, so clear the title the child propagated up.
-            .navigationTitle(Text(verbatim: ""))
             .toolbarTitleDisplayMode(.inline)
             .safeAreaInset(edge: .bottom) { bottomBar }
             .toolbar {
@@ -141,7 +137,7 @@ struct OnboardingView: View {
                 title: "Onboarding.WeekPlan.Title",
                 subtitle: "Onboarding.WeekPlan.Subtitle"
             )
-            WeekPlanEditorView()
+            WeekPlanEditorView(isEmbedded: true)
                 .scrollContentBackground(.hidden)
         }
     }
@@ -168,7 +164,7 @@ struct OnboardingView: View {
                 title: "Onboarding.Notifications.Title",
                 subtitle: "Onboarding.Notifications.Subtitle"
             )
-            NotificationSettingsView()
+            NotificationSettingsView(isEmbedded: true)
                 .scrollContentBackground(.hidden)
         }
     }

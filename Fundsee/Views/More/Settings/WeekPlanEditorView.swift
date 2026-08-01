@@ -2,6 +2,10 @@ import SwiftData
 import SwiftUI
 
 struct WeekPlanEditorView: View {
+    /// Onboarding embeds this view under its own header, where the navigation
+    /// title it needs when pushed from More would read as a stray heading.
+    var isEmbedded = false
+
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \BudgetTemplate.createdAt) private var templates: [BudgetTemplate]
     @Query private var allSettings: [PlanSettings]
@@ -25,7 +29,7 @@ struct WeekPlanEditorView: View {
                 Text("WeekPlan.Footer")
             }
         }
-        .navigationTitle("More.WeekPlan")
+        .navigationTitle(isEmbedded ? Text(verbatim: "") : Text("More.WeekPlan"))
         .toolbarTitleDisplayMode(.inline)
     }
 

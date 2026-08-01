@@ -2,6 +2,10 @@ import SwiftData
 import SwiftUI
 
 struct NotificationSettingsView: View {
+    /// Onboarding embeds this view under its own header, where the navigation
+    /// title it needs when pushed from More would read as a stray heading.
+    var isEmbedded = false
+
     @AppStorage("notifyDaily") private var notifyDaily = false
     @AppStorage("notifyDailyHour") private var notifyDailyHour = 21
     @AppStorage("notifyWeekly") private var notifyWeekly = false
@@ -37,7 +41,7 @@ struct NotificationSettingsView: View {
                 Text("Notifications.Monthly.Footer")
             }
         }
-        .navigationTitle("More.Notifications")
+        .navigationTitle(isEmbedded ? Text(verbatim: "") : Text("More.Notifications"))
         .toolbarTitleDisplayMode(.inline)
         .onChange(of: [notifyDaily, notifyWeekly, notifyMonthly]) {
             reschedule()

@@ -101,12 +101,14 @@ struct ExtraBudgetCard: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity)
-            .background(
-                Color.accentColor.opacity(colorScheme == .light ? 0.12 : 0.22),
-                in: .rect(cornerRadius: 24)
-            )
+            // The shadow belongs to the card's shape: on the whole button it
+            // would fall behind the translucent fill and ghost every glyph.
+            .background {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color.accentColor.opacity(colorScheme == .light ? 0.12 : 0.22))
+                    .shadow(color: colorScheme == .light ? Color.accentColor.opacity(0.2) : .clear, radius: 8, y: 3)
+            }
         }
         .buttonStyle(.plain)
-        .shadow(color: colorScheme == .light ? Color.accentColor.opacity(0.2) : .clear, radius: 8, y: 3)
     }
 }

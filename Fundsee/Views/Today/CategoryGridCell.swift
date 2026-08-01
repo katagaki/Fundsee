@@ -60,6 +60,7 @@ struct CategoryGridCell: View {
                 }
             }
         }
+        .compositingGroup()
         .clipShape(.rect(cornerRadius: 22))
         .shadow(
             color: colorScheme == .light ? category.iconColor.opacity(0.35) : .clear,

@@ -27,6 +27,8 @@ struct BudgetRingView: View {
     /// Overall budgets folded into `used`/`budget`, each drawn as an inner arc.
     var extraArcs: [ExtraArc] = []
 
+    @Environment(\.colorScheme) private var colorScheme
+
     /// Launch with `-ringGuides YES` to overlay the ring's own circles in red.
     private static let showsGuides = UserDefaults.standard.bool(forKey: "ringGuides")
 
@@ -42,39 +44,40 @@ struct BudgetRingView: View {
             let size = min(proxy.size.width, proxy.size.height)
             let thickness = size * 0.115
 
-            // A round cap sticks out past the end of its arc by half the ring's
-            // width; measured as a fraction of the circle, that is how far each
-            // stroke is pulled in so the segment still reads its own size.
+            // Half the ring's width as a fraction of the circle: the yardstick
+            // for how short a stretch can get before its ends crowd each other.
             let cap = (thickness / 2) / (.pi * (size - thickness))
+
+            let corner = thickness * 0.3
 
             ZStack {
                 ForEach(Array(spans(cap: cap).enumerated()), id: \.offset) { _, span in
-                    Circle()
-                        .inset(by: thickness / 2)
-                        .trim(from: span.start, to: span.end)
-                        .stroke(
-                            Color.gray.opacity(0.2),
-                            style: StrokeStyle(lineWidth: thickness, lineCap: .round)
-                        )
+                    let track = RingSegment(
+                        start: span.start,
+                        end: span.end,
+                        thickness: thickness,
+                        cornerRadius: corner
+                    )
 
-                    if let carried = span.carried {
-                        Circle()
-                            .inset(by: thickness / 2)
-                            .trim(from: carried, to: span.end)
-                            .stroke(
-                                Color.accentColor.opacity(0.3),
-                                style: StrokeStyle(lineWidth: thickness, lineCap: .round)
-                            )
-                    }
+                    track.fill(Color.gray.opacity(0.2))
 
-                    if let filled = span.filled {
-                        Circle()
-                            .inset(by: thickness / 2)
-                            .trim(from: span.start, to: filled)
-                            .stroke(span.style, style: StrokeStyle(lineWidth: thickness, lineCap: .round))
+                    // Clipped to the track so a sliver of a fill cannot spill
+                    // past the stretch it belongs to.
+                    ZStack {
+                        if let carried = span.carried {
+                            RingSegment(start: carried, end: span.end, thickness: thickness, cornerRadius: corner)
+                                .fill(Color.accentColor.opacity(0.3))
+                        }
+
+                        if let filled = span.filled {
+                            RingSegment(start: span.start, end: filled, thickness: thickness, cornerRadius: corner)
+                                .fill(span.style)
+                        }
                     }
+                    .clipShape(track)
                 }
             }
+            .shadow(color: colorScheme == .light ? .black.opacity(0.12) : .clear, radius: 8, y: 3)
             .rotationEffect(.degrees(-90))
             .overlay {
                 if Self.showsGuides {
@@ -127,7 +130,7 @@ struct BudgetRingView: View {
         }
         guard !parts.isEmpty else { return [] }
 
-        let gap = parts.count > 1 ? 0.012 : 0
+        let gap = parts.count > 1 ? 0.007 : 0
         let available = 1 - gap * Double(parts.count)
         // Every stretch keeps its rounded ends, so each needs room for both caps
         // plus a little body. Small budgets are held to that, and the room comes
@@ -148,10 +151,8 @@ struct BudgetRingView: View {
             let usedShare = min(1, max(0, part.used.doubleValue / part.budget.doubleValue))
             let carried = max(Decimal(0), min(part.carryover, part.budget - part.used))
 
-            // The rounded ends are drawn inside the stretch, so it still reads
-            // its own size rather than spilling into the gaps beside it.
-            let start = cursor + cap
-            let end = max(start, cursor + span - cap)
+            let start = cursor
+            let end = cursor + span
             let filled = usedShare > 0 ? min(end, max(start, start + (end - start) * usedShare)) : nil
             let style: AnyShapeStyle
             if part.used > part.budget {
@@ -219,5 +220,60 @@ struct BudgetRingView: View {
                 endAngle: .degrees(360)
             )
         )
+    }
+}
+
+/// One stretch of the ring: an annular sector with rounded corners, so the ends
+/// read as rounded rather than as the semicircles a round line cap would give.
+/// `start` and `end` are fractions of the circle, clockwise from three o'clock.
+struct RingSegment: Shape {
+    var start: Double
+    var end: Double
+    var thickness: Double
+    var cornerRadius: Double
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let outer = min(rect.width, rect.height) / 2
+        let inner = max(0, outer - thickness)
+        let sweep = (end - start) * 2 * .pi
+        guard sweep > 0, inner > 0 else { return path }
+
+        // Corners cannot eat more than half the stretch, measured on the inner
+        // edge where a given radius covers the most angle.
+        let radius = min(cornerRadius, thickness / 2, sweep * inner / 2)
+        let a0 = start * 2 * .pi
+        let a1 = end * 2 * .pi
+        let outerInset = radius / outer
+        let innerInset = radius / inner
+
+        func point(_ r: Double, _ angle: Double) -> CGPoint {
+            CGPoint(x: center.x + r * cos(angle), y: center.y + r * sin(angle))
+        }
+
+        path.move(to: point(outer, a0 + outerInset))
+        path.addArc(
+            center: center,
+            radius: outer,
+            startAngle: .radians(a0 + outerInset),
+            endAngle: .radians(a1 - outerInset),
+            clockwise: false
+        )
+        path.addQuadCurve(to: point(outer - radius, a1), control: point(outer, a1))
+        path.addLine(to: point(inner + radius, a1))
+        path.addQuadCurve(to: point(inner, a1 - innerInset), control: point(inner, a1))
+        path.addArc(
+            center: center,
+            radius: inner,
+            startAngle: .radians(a1 - innerInset),
+            endAngle: .radians(a0 + innerInset),
+            clockwise: true
+        )
+        path.addQuadCurve(to: point(inner + radius, a0), control: point(inner, a0))
+        path.addLine(to: point(outer - radius, a0))
+        path.addQuadCurve(to: point(outer, a0 + outerInset), control: point(outer, a0))
+        path.closeSubpath()
+        return path
     }
 }

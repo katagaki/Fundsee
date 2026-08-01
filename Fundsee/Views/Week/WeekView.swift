@@ -12,6 +12,7 @@ struct WeekView: View {
     @State private var stripDay: Date?
     @State private var inputCategory: String?
     @Namespace private var cardZoom
+    @Namespace private var daySelection
 
     private var engine: BudgetEngine {
         BudgetEngine(templates: templates, overrides: overrides, entries: entries, settings: allSettings.first)
@@ -62,13 +63,8 @@ struct WeekView: View {
         let carryover = budget - engine.weekBudget(containing: referenceDate, includeCarry: false)
         return Section {
             VStack(spacing: 12) {
-            BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisWeek", defaultValue: "of \(budget.currencyString) this week"), carryover: carryover)
+            BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisWeek", defaultValue: "of \(budget.currencyString) this week"), carryover: carryover, spendPalette: engine.spendPalette(in: week))
                 .frame(height: 200)
-            HStack {
-                StatBlock(title: "Stat.Budget", amount: budget)
-                StatBlock(title: "Stat.Used", amount: used)
-                StatBlock(title: "Stat.Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
-            }
             if engine.weeklyExtra > 0 {
                 ExtraBudgetCard(
                     title: "OverallBudgets.Weekly.Header",
@@ -95,12 +91,13 @@ struct WeekView: View {
                 HStack(spacing: 4) {
                     ForEach(days, id: \.self) { day in
                         Button {
-                            withAnimation(.snappy) { stripDay = day }
+                            withAnimation(.standard) { stripDay = day }
                         } label: {
                             WeekDayPill(
                                 day: day,
                                 isSelected: day == shown,
-                                status: dayStatus(day, engine: engine)
+                                status: dayStatus(day, engine: engine),
+                                selectionNamespace: daySelection
                             )
                         }
                         .buttonStyle(.borderless)

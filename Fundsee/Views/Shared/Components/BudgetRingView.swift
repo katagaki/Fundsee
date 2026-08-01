@@ -119,7 +119,7 @@ struct BudgetRingView: View {
         // Every stretch keeps its rounded ends, so each needs room for both caps
         // plus a little body. Small budgets are held to that, and the room comes
         // out of the larger stretches.
-        let minimum = min(available / Double(parts.count), 5 * cap)
+        let minimum = min(available / Double(parts.count), 4 * cap)
         var widths = parts.map { $0.budget.doubleValue / budget.doubleValue * available }
         let owed = widths.reduce(0) { $0 + max(0, minimum - $1) }
         let spare = widths.reduce(0) { $0 + max(0, $1 - minimum) }

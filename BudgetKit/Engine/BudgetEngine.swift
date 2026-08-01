@@ -74,6 +74,35 @@ struct BudgetEngine {
         entries(in: interval).reduce(0) { $0 + $1.amount }
     }
 
+    /// Spending split by category name, largest first.
+    func spentByCategory(in interval: DateInterval) -> [(name: String, amount: Decimal)] {
+        breakdown(of: entries(in: interval))
+    }
+
+    func spentByCategory(on date: Date) -> [(name: String, amount: Decimal)] {
+        breakdown(of: entries(on: date))
+    }
+
+    private func breakdown(of entries: [SpendEntry]) -> [(name: String, amount: Decimal)] {
+        var totals: [String: Decimal] = [:]
+        for entry in entries {
+            totals[entry.categoryName, default: 0] += entry.amount
+        }
+        return totals
+            .map { (name: $0.key, amount: $0.value) }
+            .sorted { ($0.amount, $1.name) > ($1.amount, $0.name) }
+    }
+
+    /// The icon any template gives this category name.
+    func categoryIconName(_ name: String) -> String? {
+        for template in templates {
+            if let match = template.sortedCategories.first(where: { $0.name == name }) {
+                return match.iconName
+            }
+        }
+        return nil
+    }
+
     func recentAmounts(category: String, limit: Int = 3) -> [Decimal] {
         var seen: [Decimal] = []
         for entry in entries.filter({ $0.categoryName == category }).sorted(by: { $0.timestamp > $1.timestamp }) {

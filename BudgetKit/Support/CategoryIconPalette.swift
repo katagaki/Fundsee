@@ -17,6 +17,17 @@ enum CategoryIconPalette {
         case "book.fill": .yellow
         case "heart.fill": .pink
         case "pawprint.fill": .brown
+        case "cross.case.fill": .red
+        case "pills.fill": .pink
+        case "stethoscope": .mint
+        case "bolt.fill": .yellow
+        case "drop.fill": .cyan
+        case "flame.fill": .orange
+        case "wifi": .blue
+        case "creditcard.fill": .indigo
+        case "arrow.triangle.2.circlepath": .purple
+        case "house.fill": .green
+        case "graduationcap.fill": .cyan
         case "tag.fill": .mint
         default: .gray
         }

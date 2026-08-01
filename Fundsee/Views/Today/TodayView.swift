@@ -61,7 +61,8 @@ struct TodayView: View {
                     used: used,
                     budget: budget,
                     centerCaption: String(localized: "Ring.Caption.Of", defaultValue: "of \(budget.currencyString)"),
-                    carryover: carryover
+                    carryover: carryover,
+                    spendPalette: engine.spendPalette(on: today)
                 )
                 .frame(height: 200)
 

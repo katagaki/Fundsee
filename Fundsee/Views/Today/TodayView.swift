@@ -22,21 +22,14 @@ struct TodayView: View {
             List {
                 ringSection
                 categoriesSection
+                changePlanSection
             }
             .listStyle(.plain)
             .navigationTitle(Date.now.formatted(.dateTime.weekday(.wide).month().day()))
             .toolbarTitleDisplayMode(.inlineLarge)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingTemplatePicker = true
-                    } label: {
-                        Label("Common.ChangeTemplate", systemImage: AppSymbol.budgetTemplate)
-                    }
-                }
-            }
             .sheet(isPresented: $showingTemplatePicker) {
                 TemplateOverrideSheet(initialDate: today)
+                    .navigationTransition(.zoom(sourceID: "changePlan", in: cardZoom))
             }
             .sheet(item: $inputCategory) { category in
                 SpendInputSheet(
@@ -114,4 +107,24 @@ struct TodayView: View {
         }
     }
 
+    private var changePlanSection: some View {
+        Section {
+            Button {
+                showingTemplatePicker = true
+            } label: {
+                Text("Common.ChangeTemplate")
+                    .font(.body.weight(.semibold))
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.capsule)
+            .controlSize(.large)
+            .matchedTransitionSource(id: "changePlan", in: cardZoom)
+            .padding(.horizontal, 16)
+            .padding(.top, 20)
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
+    }
 }

@@ -8,6 +8,12 @@ struct CategoryGridCell: View {
     let category: TemplateCategory
     let used: Decimal
 
+    /// Light mode keeps the tiles pale, so white text washes out on them: the
+    /// label takes a darkened version of the category color instead.
+    private var labelColor: Color {
+        colorScheme == .light ? category.iconColor.mix(with: .black, by: 0.55) : .white
+    }
+
     var body: some View {
         let over = used > category.amount
         let fraction = category.amount > 0
@@ -17,16 +23,16 @@ struct CategoryGridCell: View {
             Image(systemName: category.iconName)
                 .font(.system(size: 20))
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.white)
+                .foregroundStyle(labelColor)
                 .frame(height: 26)
             Text(category.name)
                 .font(.caption.weight(.medium))
-                .foregroundStyle(.white.opacity(0.9))
+                .foregroundStyle(labelColor.opacity(0.9))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             Text(used.compactCurrencyString)
                 .font(.system(.subheadline, design: .rounded, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(labelColor)
                 .contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -37,9 +43,10 @@ struct CategoryGridCell: View {
                 ZStack(alignment: .leading) {
                     Rectangle()
                         .fill(category.iconColor.gradient)
-                        .opacity(0.3)
+                        .opacity(colorScheme == .light ? 0.22 : 0.3)
                     Rectangle()
                         .fill(category.iconColor.gradient)
+                        .opacity(colorScheme == .light ? 0.5 : 1)
                         .frame(width: proxy.size.width * fraction)
 
                     if over {

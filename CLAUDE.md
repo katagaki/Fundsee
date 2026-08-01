@@ -39,6 +39,7 @@ Adding a widget kind means updating `_XCWidgetKind` in all five.
 Simulator tap injection is broken (SimulatorKit is missing under the Xcode-beta path), so verify UI headlessly: `xcodebuild` to the simulator by device ID, `simctl install/launch`, `simctl io screenshot`, then read the screenshot. The app reads launch arguments to make this possible:
 
 - `-hasCompletedOnboarding YES`, `-onboardingStep N`, `-initialTab today|week|month|year|more`
+- `-ringGuides YES` overlays the budget ring's outer edge, centerline and inner edge in thin red, for checking segment geometry.
 - `-seedSampleData YES` fills the past 4 months with plausible entries; it skips today and any day that already has data, so it is safe on real data.
 - `-AppleLanguages "(ja)"` (or `ko`, `zh-Hans`, `zh-Hant`) launches in that language, which is how the CJK layouts get checked.
 

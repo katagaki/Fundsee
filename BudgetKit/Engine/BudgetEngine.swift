@@ -76,6 +76,10 @@ struct BudgetEngine {
         entries(in: interval).reduce(0) { $0 + $1.amount }
     }
 
+    func spent(in interval: DateInterval, scope: SpendScope) -> Decimal {
+        entries(in: interval).filter { $0.scope == scope }.reduce(0) { $0 + $1.amount }
+    }
+
     func spent(in interval: DateInterval, category: String) -> Decimal {
         entries(in: interval).filter { $0.categoryName == category }.reduce(0) { $0 + $1.amount }
     }
@@ -83,6 +87,10 @@ struct BudgetEngine {
     /// Spending split by category name, largest first.
     func spentByCategory(in interval: DateInterval) -> [(name: String, amount: Decimal)] {
         breakdown(of: entries(in: interval))
+    }
+
+    func spentByCategory(in interval: DateInterval, scope: SpendScope) -> [(name: String, amount: Decimal)] {
+        breakdown(of: entries(in: interval).filter { $0.scope == scope })
     }
 
     func spentByCategory(on date: Date) -> [(name: String, amount: Decimal)] {

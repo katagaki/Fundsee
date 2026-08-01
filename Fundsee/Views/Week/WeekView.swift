@@ -65,7 +65,16 @@ struct WeekView: View {
         let carryover = budget - engine.weekBudget(containing: referenceDate, includeCarry: false)
         return Section {
             VStack(spacing: 12) {
-            BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisWeek", defaultValue: "of \(budget.currencyString) this week"), carryover: carryover, spendPalette: engine.spendPalette(in: week))
+            BudgetRingView(
+                used: used,
+                budget: budget,
+                centerCaption: String(localized: "Ring.Caption.OfThisWeek", defaultValue: "of \(budget.currencyString) this week"),
+                carryover: carryover,
+                spendPalette: engine.spendPalette(in: week),
+                extraArcs: engine.weeklyExtra > 0
+                    ? [ExtraArc(used: engine.spent(in: week, scope: .week), budget: engine.weeklyExtra)]
+                    : []
+            )
                 .frame(height: 200)
             }
             .frame(maxWidth: .infinity)

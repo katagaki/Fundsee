@@ -34,6 +34,26 @@ struct MonthView: View {
         return month.contains(today) && today < month.end ? today : month.start
     }
 
+    /// One arc per overall budget the month includes: the monthly one, and the
+    /// weekly one totalled across the weeks that start in this month.
+    private func monthExtraArcs(engine: BudgetEngine, month: DateInterval) -> [ExtraArc] {
+        var arcs: [ExtraArc] = []
+        if engine.monthlyExtra > 0 {
+            arcs.append(ExtraArc(used: engine.spent(in: month, scope: .month), budget: engine.monthlyExtra))
+        }
+        if engine.weeklyExtra > 0 {
+            let weeks = engine.weeks(inMonthContaining: month.start).count
+            arcs.append(
+                ExtraArc(
+                    used: engine.spent(in: month, scope: .week),
+                    budget: engine.weeklyExtra * Decimal(weeks),
+                    color: .accentColor.opacity(0.6)
+                )
+            )
+        }
+        return arcs
+    }
+
     private var shownWeek: DateInterval {
         let engine = self.engine
         let weeks = engine.weeks(inMonthContaining: referenceDate)
@@ -83,7 +103,13 @@ struct MonthView: View {
         let used = engine.spent(in: month)
         return Section {
             VStack(spacing: 12) {
-            BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"), spendPalette: engine.spendPalette(in: month))
+            BudgetRingView(
+                used: used,
+                budget: budget,
+                centerCaption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"),
+                spendPalette: engine.spendPalette(in: month),
+                extraArcs: monthExtraArcs(engine: engine, month: month)
+            )
                 .frame(height: 200)
             ExtraBudgetCards(
                 engine: engine,

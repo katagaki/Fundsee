@@ -19,6 +19,13 @@ enum ExtraBudgetKind: Hashable {
         }
     }
 
+    var scope: SpendScope {
+        switch self {
+        case .weekly: .week
+        case .monthly: .month
+        }
+    }
+
     var categoryName: String {
         switch self {
         case .weekly:
@@ -35,7 +42,7 @@ struct ExtraBudgetCards: View {
     let engine: BudgetEngine
     let date: Date
     let namespace: Namespace.ID
-    @Binding var inputCategory: String?
+    @Binding var spendTarget: SpendTarget?
     var kinds: [ExtraBudgetKind] = [.weekly, .monthly]
 
     var body: some View {
@@ -56,7 +63,7 @@ struct ExtraBudgetCards: View {
             budget: budget,
             used: engine.spent(in: interval, category: name)
         ) {
-            inputCategory = name
+            spendTarget = SpendTarget(name: name, scope: kind.scope, period: interval)
         }
         .matchedTransitionSource(id: name, in: namespace)
     }

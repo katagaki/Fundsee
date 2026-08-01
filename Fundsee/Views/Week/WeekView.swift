@@ -10,7 +10,7 @@ struct WeekView: View {
 
     @State private var weekOffset = 0
     @State private var stripDay: Date?
-    @State private var inputCategory: String?
+    @State private var spendTarget: SpendTarget?
     @Namespace private var cardZoom
     @Namespace private var daySelection
 
@@ -44,13 +44,15 @@ struct WeekView: View {
                     Button("Week.Next", systemImage: "chevron.right") { weekOffset += 1 }
                 }
             }
-            .sheet(item: $inputCategory) { category in
+            .sheet(item: $spendTarget) { target in
                 SpendInputSheet(
                     date: shownDay,
-                    categoryName: category,
-                    recentAmounts: engine.recentAmounts(category: category)
+                    categoryName: target.name,
+                    recentAmounts: engine.recentAmounts(category: target.name),
+                    scope: target.scope,
+                    period: target.period
                 )
-                .navigationTransition(.zoom(sourceID: category, in: cardZoom))
+                .navigationTransition(.zoom(sourceID: target.name, in: cardZoom))
             }
         }
     }
@@ -132,7 +134,7 @@ struct WeekView: View {
                     ForEach(template.sortedCategories) { category in
                         let categorySpent = engine.spent(on: shown, category: category.name)
                         Button {
-                            inputCategory = category.name
+                            spendTarget = SpendTarget(name: category.name)
                         } label: {
                             CategoryGridCell(category: category, used: categorySpent)
                         }
@@ -146,7 +148,7 @@ struct WeekView: View {
                 .listRowSeparator(.hidden)
             }
 
-            ExtraBudgetCards(engine: engine, date: shown, namespace: cardZoom, inputCategory: $inputCategory)
+            ExtraBudgetCards(engine: engine, date: shown, namespace: cardZoom, spendTarget: $spendTarget)
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
                 .listRowBackground(Color.clear)

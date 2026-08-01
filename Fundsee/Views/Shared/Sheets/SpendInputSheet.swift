@@ -11,6 +11,10 @@ struct SpendInputSheet: View {
     let date: Date
     let categoryName: String
     let recentAmounts: [Decimal]
+    /// Which budget the entry counts against. Overall-budget spending is listed
+    /// for its whole week or month, since that is the period it is spread over.
+    var scope: SpendScope = .day
+    var period: DateInterval?
 
     @Query(sort: \SpendEntry.timestamp, order: .reverse) private var allEntries: [SpendEntry]
 
@@ -18,12 +22,17 @@ struct SpendInputSheet: View {
     @FocusState private var amountFocused: Bool
 
     private var recordedEntries: [SpendEntry] {
-        allEntries.filter {
-            $0.categoryName == categoryName && Calendar.current.isDate($0.dayKey, inSameDayAs: date)
+        allEntries.filter { entry in
+            guard entry.categoryName == categoryName, entry.scope == scope else { return false }
+            guard let period else { return Calendar.current.isDate(entry.dayKey, inSameDayAs: date) }
+            return period.contains(entry.dayKey) && entry.dayKey < period.end
         }
     }
 
     private var recordedTitle: String {
+        if period != nil {
+            return String(localized: "SpendInput.Recorded", defaultValue: "Recorded")
+        }
         if date.isToday {
             return String(localized: "Common.TodaysSpend", defaultValue: "Today's Spend")
         }
@@ -71,7 +80,7 @@ struct SpendInputSheet: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("SpendInput.Add") {
                         if let amount, amount > 0 {
-                            modelContext.insert(SpendEntry(dayKey: date, categoryName: categoryName, amount: amount))
+                            modelContext.insert(SpendEntry(dayKey: date, categoryName: categoryName, amount: amount, scope: scope))
                             try? modelContext.save()
                         }
                         dismiss()

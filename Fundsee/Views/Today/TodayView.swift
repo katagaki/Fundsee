@@ -7,7 +7,7 @@ struct TodayView: View {
     @Query(sort: \SpendEntry.timestamp, order: .reverse) private var entries: [SpendEntry]
     @Query private var allSettings: [PlanSettings]
 
-    @State private var inputCategory: String?
+    @State private var spendTarget: SpendTarget?
     @State private var showingTemplatePicker = false
     @Namespace private var cardZoom
 
@@ -32,13 +32,15 @@ struct TodayView: View {
                 TemplateOverrideSheet(initialDate: today)
                     .navigationTransition(.zoom(sourceID: "changePlan", in: cardZoom))
             }
-            .sheet(item: $inputCategory) { category in
+            .sheet(item: $spendTarget) { target in
                 SpendInputSheet(
                     date: today,
-                    categoryName: category,
-                    recentAmounts: engine.recentAmounts(category: category)
+                    categoryName: target.name,
+                    recentAmounts: engine.recentAmounts(category: target.name),
+                    scope: target.scope,
+                    period: target.period
                 )
-                .navigationTransition(.zoom(sourceID: category, in: cardZoom))
+                .navigationTransition(.zoom(sourceID: target.name, in: cardZoom))
             }
         }
     }
@@ -86,7 +88,7 @@ struct TodayView: View {
                     ForEach(template.sortedCategories) { category in
                         let used = engine.spent(on: today, category: category.name)
                         Button {
-                            inputCategory = category.name
+                            spendTarget = SpendTarget(name: category.name)
                         } label: {
                             CategoryGridCell(category: category, used: used)
                         }
@@ -110,7 +112,7 @@ struct TodayView: View {
 
     private var extraBudgetsSection: some View {
         Section {
-            ExtraBudgetCards(engine: engine, date: today, namespace: cardZoom, inputCategory: $inputCategory)
+            ExtraBudgetCards(engine: engine, date: today, namespace: cardZoom, spendTarget: $spendTarget)
                 .padding(.horizontal, 16)
                 .padding(.top, 10)
         }

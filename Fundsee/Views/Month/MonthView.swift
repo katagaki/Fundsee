@@ -12,7 +12,7 @@ struct MonthView: View {
 
     @State private var monthOffset = 0
     @State private var selectedWeekStart: Date?
-    @State private var inputCategory: String?
+    @State private var spendTarget: SpendTarget?
     @Namespace private var weekSelection
     @Namespace private var cardZoom
 
@@ -63,13 +63,15 @@ struct MonthView: View {
                     Button("Month.Next", systemImage: "chevron.right") { monthOffset += 1 }
                 }
             }
-            .sheet(item: $inputCategory) { category in
+            .sheet(item: $spendTarget) { target in
                 SpendInputSheet(
                     date: entryDate,
-                    categoryName: category,
-                    recentAmounts: engine.recentAmounts(category: category)
+                    categoryName: target.name,
+                    recentAmounts: engine.recentAmounts(category: target.name),
+                    scope: target.scope,
+                    period: target.period
                 )
-                .navigationTransition(.zoom(sourceID: category, in: cardZoom))
+                .navigationTransition(.zoom(sourceID: target.name, in: cardZoom))
             }
         }
     }
@@ -87,7 +89,7 @@ struct MonthView: View {
                 engine: engine,
                 date: entryDate,
                 namespace: cardZoom,
-                inputCategory: $inputCategory,
+                spendTarget: $spendTarget,
                 kinds: [.monthly]
             )
             }

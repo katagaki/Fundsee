@@ -54,8 +54,10 @@ struct BudgetEngine {
 
     // MARK: - Spending
 
+    /// Only day-scoped entries: an overall-budget purchase is recorded on a day
+    /// but is not part of that day's plan.
     func entries(on date: Date) -> [SpendEntry] {
-        entries.filter { calendar.isDate($0.dayKey, inSameDayAs: date) }
+        entries.filter { $0.scope == .day && calendar.isDate($0.dayKey, inSameDayAs: date) }
     }
 
     func entries(in interval: DateInterval) -> [SpendEntry] {

@@ -5,21 +5,34 @@ A visual budget management app for iOS 26.0+. Users define budget templates for 
 ## Things you cannot tell from the code
 
 - The `.xcodeproj` was written by hand with synchronized folder groups. Adding a file to a target's folder adds it to that target; there are no per-file build entries to maintain.
-- **BudgetKit/** is intentionally a shared source folder, not a framework. Its files compile into all three targets.
-- **FundseeHarness** is developer-only tooling and must never ship. It exists because widget UIs cannot be verified headlessly here. Debug-only affordances go in the harness, never in the app.
+- **BudgetKit/** is intentionally a shared source folder, not a framework. Its files compile into both targets.
+- Widget UIs are inspected through the per-family `FundseeWidgets (…)` schemes, which run the extension in the Simulator's widget preview host. There is no in-app debug surface for them; keep debug-only affordances out of the app.
 - The models look over-constrained (every property defaulted, relationships optional, no unique attributes) because CloudKit requires it. Keep that shape.
 - Carryover math is deliberately bounded: next-day carry resets at week boundaries, next-week carry reaches back exactly one week. These are product decisions, not bugs.
 - Two past bugs to not reintroduce: `DateInterval.contains` includes its end instant, so day-in-week checks must be half-open; and two BarMarks at the same x silently stack in Swift Charts, which is why charts use `yStart`/`yEnd`.
 - Notification report content is computed at schedule time and refreshed on foreground, so it is only as current as the last app launch. Accepted limitation to avoid an extension.
 - There is no `AppIcon.appiconset`; the Icon Composer document `Fundsee/AppIcon.icon` is the only icon source.
 - `DEVELOPMENT_TEAM` is intentionally empty. Simulator-only for now; devices and real CloudKit sync need a team plus the App Group and iCloud container registered.
+- Localization keys are `Pascal.Case.Dotted`, never the English text. Strings with arguments use `String(localized: "Key.Path", defaultValue: "English with \(value)")` so the key stays symbolic and the English lives in one place. Plain SwiftUI literals (`Text("Tab.Today")`) take their English from the catalog's `en` entry.
+- `Localizable.xcstrings` exists once per target. BudgetKit compiles into both, so any BudgetKit string must be present in both catalogs.
+- Seeded template and category names are translated at insert time and then stored, so they are the user's data afterwards. `DefaultData.originalCategoryNames` keeps the pre-localization English names purely so the icon backfill still matches rows already on disk.
 
 ## User preferences (established in review, keep them)
 
 - No em-dashes in user-facing copy.
 - No status pills; convey state with progress bars and color.
 - Toolbar Cancel/Done are label-less `Button(role: .cancel)` / `Button(role: .confirm)`.
+- Navigation titles use `.toolbarTitleDisplayMode`, never `.navigationBarTitleDisplayMode`. The five tab roots are `.inlineLarge`; everything pushed or presented is `.inline`.
 - Card/tile shadows appear in light mode only.
+
+## Schemes
+
+All schemes are shared, in `Fundsee.xcodeproj/xcshareddata/xcschemes`.
+
+- **Fundsee** runs the app. Its launch arguments are pre-filled but disabled; tick them in the scheme editor instead of retyping.
+- **FundseeWidgets** and **FundseeWidgets (Medium / Circular / Rectangular / Inline)** each run the extension in the Simulator's widget preview host, one per `WidgetFamily`. They differ only in the `_XCWidgetFamily` environment variable. Plain **FundseeWidgets** is `systemSmall`.
+
+Adding a widget kind means updating `_XCWidgetKind` in all five.
 
 ## Working on this machine
 
@@ -27,3 +40,4 @@ Simulator tap injection is broken (SimulatorKit is missing under the Xcode-beta 
 
 - `-hasCompletedOnboarding YES`, `-onboardingStep N`, `-initialTab today|week|month|year|more`
 - `-seedSampleData YES` fills the past 4 months with plausible entries; it skips today and any day that already has data, so it is safe on real data.
+- `-AppleLanguages "(ja)"` (or `ko`, `zh-Hans`, `zh-Hant`) launches in that language, which is how the CJK layouts get checked.

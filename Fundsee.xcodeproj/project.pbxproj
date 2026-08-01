@@ -37,7 +37,6 @@
 /* Begin PBXFileReference section */
 		A10000040000000000000001 /* Fundsee.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fundsee.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000030000000000000002 /* FundseeWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FundseeWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		A30000020000000000000003 /* FundseeHarness.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FundseeHarness.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,11 +58,6 @@
 		A20000010000000000000002 /* BudgetKit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = BudgetKit;
-			sourceTree = "<group>";
-		};
-		A30000010000000000000003 /* FundseeHarness */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FundseeHarness;
 			sourceTree = "<group>";
 		};
 		A20000020000000000000002 /* FundseeWidgets */ = {
@@ -91,13 +85,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A30000060000000000000003 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -107,7 +94,6 @@
 				A10000010000000000000001 /* Fundsee */,
 				A20000010000000000000002 /* BudgetKit */,
 				A20000020000000000000002 /* FundseeWidgets */,
-				A30000010000000000000003 /* FundseeHarness */,
 				A10000030000000000000001 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -117,7 +103,6 @@
 			children = (
 				A10000040000000000000001 /* Fundsee.app */,
 				A20000030000000000000002 /* FundseeWidgets.appex */,
-				A30000020000000000000003 /* FundseeHarness.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -169,27 +154,6 @@
 			productReference = A20000030000000000000002 /* FundseeWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
-		A30000040000000000000003 /* FundseeHarness */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A30000080000000000000003 /* Build configuration list for PBXNativeTarget "FundseeHarness" */;
-			buildPhases = (
-				A30000050000000000000003 /* Sources */,
-				A30000060000000000000003 /* Frameworks */,
-				A30000070000000000000003 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				A20000010000000000000002 /* BudgetKit */,
-				A30000010000000000000003 /* FundseeHarness */,
-			);
-			name = FundseeHarness;
-			productName = FundseeHarness;
-			productReference = A30000020000000000000003 /* FundseeHarness.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -211,6 +175,10 @@
 			knownRegions = (
 				en,
 				Base,
+				ja,
+				ko,
+				"zh-Hans",
+				"zh-Hant",
 			);
 			mainGroup = A10000020000000000000001;
 			minimizedProjectReferenceProxies = 1;
@@ -221,7 +189,6 @@
 			targets = (
 				A10000060000000000000001 /* Fundsee */,
 				A20000040000000000000002 /* FundseeWidgets */,
-				A30000040000000000000003 /* FundseeHarness */,
 			);
 		};
 /* End PBXProject section */
@@ -241,13 +208,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A30000070000000000000003 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -259,13 +219,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A20000050000000000000002 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		A30000050000000000000003 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -409,7 +362,7 @@
 				CODE_SIGN_ENTITLEMENTS = Fundsee/Fundsee.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = YYM4Z6MU8F;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Fundsee sends you daily, weekly, and monthly budget reports.";
@@ -441,7 +394,7 @@
 				CODE_SIGN_ENTITLEMENTS = Fundsee/Fundsee.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = YYM4Z6MU8F;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSUserNotificationsUsageDescription = "Fundsee sends you daily, weekly, and monthly budget reports.";
@@ -471,7 +424,7 @@
 				CODE_SIGN_ENTITLEMENTS = FundseeWidgets/FundseeWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = YYM4Z6MU8F;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FundseeWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Fundsee;
@@ -482,7 +435,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tsubuzaki.Fundsee.FundseeWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tsubuzaki.Fundsee.Widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -497,7 +450,7 @@
 				CODE_SIGN_ENTITLEMENTS = FundseeWidgets/FundseeWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = YYM4Z6MU8F;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FundseeWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Fundsee;
@@ -508,7 +461,7 @@
 					"@executable_path/../../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tsubuzaki.Fundsee.FundseeWidgets;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tsubuzaki.Fundsee.Widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -517,66 +470,9 @@
 			};
 			name = Release;
 		};
-		A30000090000000000000003 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = FundseeHarness/FundseeHarness.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tsubuzaki.FundseeHarness;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		A300000A0000000000000003 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = FundseeHarness/FundseeHarness.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.tsubuzaki.FundseeHarness;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A30000080000000000000003 /* Build configuration list for PBXNativeTarget "FundseeHarness" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A30000090000000000000003 /* Debug */,
-				A300000A0000000000000003 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A10000070000000000000001 /* Build configuration list for PBXNativeTarget "Fundsee" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

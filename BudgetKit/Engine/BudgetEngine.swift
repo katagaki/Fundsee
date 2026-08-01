@@ -159,10 +159,10 @@ struct BudgetEngine {
 
         var title: String {
             switch self {
-            case .onTrack: "On Track"
-            case .surplus: "Surplus"
-            case .debt: "Over Budget"
-            case .upcoming: "Upcoming"
+            case .onTrack: String(localized: "MonthStatus.OnTrack", defaultValue: "On Track")
+            case .surplus: String(localized: "MonthStatus.Surplus", defaultValue: "Surplus")
+            case .debt: String(localized: "MonthStatus.OverBudget", defaultValue: "Over Budget")
+            case .upcoming: String(localized: "MonthStatus.Upcoming", defaultValue: "Upcoming")
             }
         }
     }
@@ -187,22 +187,5 @@ struct BudgetEngine {
         if used > prorated + tolerance { return .debt }
         if used < prorated - tolerance { return .surplus }
         return .onTrack
-    }
-}
-
-// MARK: - Formatting helpers
-
-extension Decimal {
-    var doubleValue: Double { NSDecimalNumber(decimal: self).doubleValue }
-
-    var currencyString: String {
-        self.formatted(.currency(code: Locale.current.currency?.identifier ?? "USD"))
-    }
-
-    var compactCurrencyString: String {
-        self.formatted(
-            .currency(code: Locale.current.currency?.identifier ?? "USD")
-            .precision(.fractionLength(0))
-        )
     }
 }

@@ -19,19 +19,19 @@ struct ContentView: View {
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Today", systemImage: "sun.max.fill", value: "today") {
+            Tab("Tab.Today", systemImage: "sun.max.fill", value: "today") {
                 TodayView()
             }
-            Tab("Week", systemImage: "calendar.day.timeline.left", value: "week") {
+            Tab("Tab.Week", systemImage: "calendar.day.timeline.left", value: "week") {
                 WeekView()
             }
-            Tab("Month", systemImage: "calendar", value: "month") {
+            Tab("Tab.Month", systemImage: "calendar", value: "month") {
                 MonthView()
             }
-            Tab("Year", systemImage: "chart.bar.xaxis", value: "year") {
+            Tab("Tab.Year", systemImage: "chart.bar.xaxis", value: "year") {
                 YearView()
             }
-            Tab("More", systemImage: "ellipsis", value: "more") {
+            Tab("Tab.More", systemImage: "ellipsis", value: "more") {
                 MoreView()
             }
         }

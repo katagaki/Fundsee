@@ -31,7 +31,7 @@ struct OnboardingView: View {
                         } label: {
                             Image(systemName: "chevron.backward")
                         }
-                        .accessibilityLabel("Back")
+                        .accessibilityLabel("Common.Back")
                     }
                 }
             }
@@ -44,7 +44,7 @@ struct OnboardingView: View {
     private var bottomBar: some View {
         VStack(spacing: 16) {
             if step == 0 {
-                Text("Your budgets stay private, synced securely with iCloud.")
+                Text("Onboarding.Privacy")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -57,7 +57,7 @@ struct OnboardingView: View {
                     withAnimation(.snappy) { step += 1 }
                 }
             } label: {
-                Text(step == stepCount - 1 ? "Start Budgeting" : "Continue")
+                Text(step == stepCount - 1 ? LocalizedStringKey("Onboarding.Start") : LocalizedStringKey("Onboarding.Continue"))
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity)
             }
@@ -81,7 +81,7 @@ struct OnboardingView: View {
                         .frame(width: 108, height: 108)
                         .background(Color.accentColor.gradient, in: .rect(cornerRadius: 24))
                         .shadow(color: Color.accentColor.opacity(0.35), radius: 18, y: 8)
-                    Text("Welcome to Fundsee")
+                    Text("Onboarding.Welcome.Title")
                         .font(.system(size: 34, weight: .bold))
                         .multilineTextAlignment(.center)
                 }
@@ -92,18 +92,18 @@ struct OnboardingView: View {
                 VStack(alignment: .leading, spacing: 28) {
                     featureRow(
                         icon: AppSymbol.budgetTemplate,
-                        title: "Budget Templates",
-                        subtitle: "Set up budgets for the kinds of days you have, like office days, home days, and days off."
+                        title: "Onboarding.Feature.Templates.Title",
+                        subtitle: "Onboarding.Feature.Templates.Subtitle"
                     )
                     featureRow(
                         icon: "calendar.badge.clock",
-                        title: "Plan Your Week",
-                        subtitle: "Assign a template to each weekday and Fundsee works out your week and month."
+                        title: "Onboarding.Feature.WeekPlan.Title",
+                        subtitle: "Onboarding.Feature.WeekPlan.Subtitle"
                     )
                     featureRow(
                         icon: "chart.bar.xaxis",
-                        title: "See Where You Stand",
-                        subtitle: "Visual daily, weekly, monthly, and yearly views show what's spent and what's left."
+                        title: "Onboarding.Feature.Insights.Title",
+                        subtitle: "Onboarding.Feature.Insights.Subtitle"
                     )
                 }
                 .padding(.horizontal, 36)
@@ -111,7 +111,7 @@ struct OnboardingView: View {
         }
     }
 
-    private func featureRow(icon: String, title: String, subtitle: String) -> some View {
+    private func featureRow(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 16) {
             Image(systemName: icon)
                 .font(.system(size: 30))
@@ -133,8 +133,8 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             stepHeader(
                 icon: "calendar.badge.clock",
-                title: "Plan Your Week",
-                subtitle: "Assign a template to each weekday. You can always override individual days later."
+                title: "Onboarding.WeekPlan.Title",
+                subtitle: "Onboarding.WeekPlan.Subtitle"
             )
             WeekPlanEditorView()
                 .scrollContentBackground(.hidden)
@@ -145,8 +145,8 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             stepHeader(
                 icon: "basket.fill",
-                title: "Extras & Leftovers",
-                subtitle: "Optional weekly and monthly overall budgets, and what happens to unused budget."
+                title: "Onboarding.Extras.Title",
+                subtitle: "Onboarding.Extras.Subtitle"
             )
             List {
                 OnboardingOverallBudgetsSection()
@@ -160,15 +160,15 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             stepHeader(
                 icon: "bell.badge.fill",
-                title: "Stay in the Loop",
-                subtitle: "Get daily, weekly, or monthly budget reports as notifications."
+                title: "Onboarding.Notifications.Title",
+                subtitle: "Onboarding.Notifications.Subtitle"
             )
             NotificationSettingsView()
                 .scrollContentBackground(.hidden)
         }
     }
 
-    private func stepHeader(icon: String, title: String, subtitle: String) -> some View {
+    private func stepHeader(icon: String, title: LocalizedStringKey, subtitle: LocalizedStringKey) -> some View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 40))
@@ -184,104 +184,5 @@ struct OnboardingView: View {
         }
         .padding(.top, 20)
         .padding(.bottom, 4)
-    }
-}
-
-private struct OnboardingTemplatesStep: View {
-    @Query(sort: \BudgetTemplate.createdAt) private var templates: [BudgetTemplate]
-
-    var body: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 12) {
-                Image(systemName: AppSymbol.budgetTemplate)
-                    .font(.system(size: 40))
-                    .foregroundStyle(Color.accentColor)
-                Text("Budget Templates")
-                    .font(.system(size: 28, weight: .bold))
-                Text("A template is a day's budget, split into categories. We've made three to start. Tap one to adjust the amounts.")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 36)
-            }
-            .padding(.top, 20)
-            .padding(.bottom, 4)
-
-            List {
-                ForEach(templates) { template in
-                    NavigationLink {
-                        TemplateDetailView(template: template)
-                    } label: {
-                        HStack {
-                            Label(template.name, systemImage: template.iconName)
-                            Spacer()
-                            Text(template.total.currencyString)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .scrollContentBackground(.hidden)
-        }
-    }
-}
-
-private struct OnboardingOverallBudgetsSection: View {
-    @Query private var allSettings: [PlanSettings]
-
-    var body: some View {
-        if let settings = allSettings.first {
-            @Bindable var settings = settings
-            Section {
-                LabeledContent("Weekly") {
-                    TextField("0", value: $settings.weeklyOverallBudget, format: .number)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                }
-                LabeledContent("Monthly") {
-                    TextField("0", value: $settings.monthlyOverallBudget, format: .number)
-                        .keyboardType(.decimalPad)
-                        .multilineTextAlignment(.trailing)
-                }
-            } header: {
-                Text("Overall Budgets (Optional)")
-            } footer: {
-                Text("For things that don't belong to a single day, like a weekly meal subscription or a monthly bulk buy.")
-            }
-        }
-    }
-}
-
-private struct OnboardingCarryoverSection: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var allSettings: [PlanSettings]
-
-    var body: some View {
-        if let settings = allSettings.first {
-            Section("When Budget Is Left Over or Exceeded") {
-                ForEach(CarryoverBehavior.allCases) { behavior in
-                    Button {
-                        settings.carryover = behavior
-                        try? modelContext.save()
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(behavior.title)
-                                    .font(.body.weight(.medium))
-                                Text(behavior.subtitle)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                            if settings.carryover == behavior {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(Color.accentColor)
-                            }
-                        }
-                    }
-                    .tint(.primary)
-                }
-            }
-        }
     }
 }

@@ -1,0 +1,44 @@
+import SwiftUI
+
+struct CategoryAmountRow: View {
+    @Bindable var category: TemplateCategory
+
+    /// A palette picker lays its items out in a single row, so the icons are
+    /// chunked into rows that fit a menu's width instead of overflowing.
+    private static let iconRows: [[String]] = stride(from: 0, to: AppSymbol.categoryIcons.count, by: 5).map {
+        Array(AppSymbol.categoryIcons[$0..<min($0 + 5, AppSymbol.categoryIcons.count)])
+    }
+
+    var body: some View {
+        HStack {
+            Menu {
+                ForEach(Array(Self.iconRows.enumerated()), id: \.offset) { index, row in
+                    Picker(selection: $category.iconName) {
+                        ForEach(row, id: \.self) { icon in
+                            Image(systemName: icon)
+                                .tag(icon)
+                        }
+                    } label: {
+                        if index == 0 {
+                            Text("Template.Section.Icon")
+                        }
+                    }
+                    .pickerStyle(.palette)
+                }
+            } label: {
+                Image(systemName: category.iconName)
+                    .font(.system(size: 15))
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(category.iconColor)
+                    .frame(width: 32, height: 32)
+            }
+            TextField("Template.Field.Category", text: $category.name)
+            Spacer()
+            TextField("Common.Amount", value: $category.amount, format: .number)
+                .keyboardType(.decimalPad)
+                .multilineTextAlignment(.trailing)
+                .frame(width: 90)
+                .foregroundStyle(.secondary)
+        }
+    }
+}

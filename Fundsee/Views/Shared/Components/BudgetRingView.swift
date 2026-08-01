@@ -34,7 +34,7 @@ struct BudgetRingView: View {
     var body: some View {
         Chart(segments, id: \.name) { segment in
             SectorMark(
-                angle: .value("Amount", segment.value),
+                angle: .value("Chart.Series.Amount", segment.value),
                 innerRadius: .ratio(0.72),
                 angularInset: 2
             )
@@ -44,7 +44,7 @@ struct BudgetRingView: View {
         .chartLegend(.hidden)
         .overlay {
             VStack(spacing: 4) {
-                Text(overBudget ? "Over by" : "Remaining")
+                Text(overBudget ? LocalizedStringKey("Ring.OverBy") : LocalizedStringKey("Ring.Remaining"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Text((overBudget ? used - budget : remaining).currencyString)
@@ -60,57 +60,3 @@ struct BudgetRingView: View {
         }
     }
 }
-
-/// Small labeled amount used in summary rows.
-struct StatBlock: View {
-    var title: String
-    var amount: Decimal
-    var tint: Color = .primary
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text(amount.currencyString)
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(tint)
-                .contentTransition(.numericText())
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-/// Horizontal used/budget bar for a single category or day.
-struct UsageBar: View {
-    var used: Decimal
-    var budget: Decimal
-
-    var body: some View {
-        GeometryReader { proxy in
-            let fraction = budget > 0 ? min(1, used.doubleValue / budget.doubleValue) : (used > 0 ? 1 : 0)
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(Color.gray.opacity(0.18))
-                Capsule()
-                    .fill(used > budget ? Color.red : Color.accentColor)
-                    .frame(width: max(fraction > 0 ? 6 : 0, proxy.size.width * fraction))
-            }
-        }
-        .frame(height: 8)
-    }
-}
-
-extension View {
-    func fundseeCard() -> some View {
-        self
-            .padding(16)
-            .frame(maxWidth: .infinity)
-            .background(.background.secondary, in: .rect(cornerRadius: 24))
-    }
-}
-
-extension Date {
-    var isToday: Bool { Calendar.current.isDateInToday(self) }
-}
-

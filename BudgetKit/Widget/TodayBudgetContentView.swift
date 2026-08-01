@@ -1,68 +1,5 @@
-import SwiftData
 import SwiftUI
 import WidgetKit
-
-
-struct CategorySnapshot: Identifiable {
-    let id: String
-    let iconName: String
-    let used: Decimal
-    let amount: Decimal
-}
-
-struct BudgetEntry: TimelineEntry {
-    let date: Date
-    let spent: Decimal
-    let budget: Decimal
-    let categories: [CategorySnapshot]
-
-    var remaining: Decimal { budget - spent }
-    var overBudget: Bool { spent > budget }
-    var fractionUsed: Double {
-        budget > 0 ? min(1, spent.doubleValue / budget.doubleValue) : (spent > 0 ? 1 : 0)
-    }
-
-    static let placeholder = BudgetEntry(
-        date: .now,
-        spent: 12,
-        budget: 40,
-        categories: [
-            CategorySnapshot(id: "Breakfast", iconName: "sunrise.fill", used: 4, amount: 6),
-            CategorySnapshot(id: "Lunch", iconName: "takeoutbag.and.cup.and.straw.fill", used: 8, amount: 14),
-            CategorySnapshot(id: "Dinner", iconName: "fork.knife", used: 0, amount: 16),
-        ]
-    )
-}
-
-func makeTodayBudgetEntry() -> BudgetEntry {
-    do {
-        let container = try AppGroup.readOnlyContainer()
-        let context = ModelContext(container)
-        let engine = BudgetEngine(
-            templates: try context.fetch(FetchDescriptor<BudgetTemplate>()),
-            overrides: try context.fetch(FetchDescriptor<DayOverride>()),
-            entries: try context.fetch(FetchDescriptor<SpendEntry>()),
-            settings: try context.fetch(FetchDescriptor<PlanSettings>()).first
-        )
-        let today = Date.now
-        let categories = (engine.template(for: today)?.sortedCategories ?? []).map {
-            CategorySnapshot(
-                id: $0.name,
-                iconName: $0.iconName,
-                used: engine.spent(on: today, category: $0.name),
-                amount: $0.amount
-            )
-        }
-        return BudgetEntry(
-            date: today,
-            spent: engine.spent(on: today),
-            budget: engine.effectiveBudget(for: today),
-            categories: categories
-        )
-    } catch {
-        return .placeholder
-    }
-}
 
 struct TodayBudgetContentView: View {
     let entry: BudgetEntry
@@ -73,9 +10,11 @@ struct TodayBudgetContentView: View {
     var body: some View {
         switch family {
         case .accessoryInline:
-            Text(entry.overBudget
-                 ? "\((-entry.remaining).currencyString) over today"
-                 : "\(entry.remaining.currencyString) left today")
+            if entry.overBudget {
+                Text(String(localized: "Widget.Inline.Over", defaultValue: "\((-entry.remaining).currencyString) over today"))
+            } else {
+                Text(String(localized: "Widget.Inline.Left", defaultValue: "\(entry.remaining.currencyString) left today"))
+            }
 
         case .accessoryCircular:
             Gauge(value: entry.fractionUsed) {
@@ -92,11 +31,13 @@ struct TodayBudgetContentView: View {
 
         case .accessoryRectangular:
             VStack(alignment: .leading, spacing: 2) {
-                Text("Today's Budget")
+                Text("Widget.Title")
                     .font(.headline)
-                Text(entry.overBudget
-                     ? "\((-entry.remaining).currencyString) over"
-                     : "\(entry.remaining.currencyString) left")
+                if entry.overBudget {
+                    Text(String(localized: "Widget.Rectangular.Over", defaultValue: "\((-entry.remaining).currencyString) over"))
+                } else {
+                    Text(String(localized: "Widget.Rectangular.Left", defaultValue: "\(entry.remaining.currencyString) left"))
+                }
                 Gauge(value: entry.fractionUsed) { EmptyView() }
                     .gaugeStyle(.accessoryLinearCapacity)
             }
@@ -141,7 +82,7 @@ struct TodayBudgetContentView: View {
                 )
                 .rotationEffect(.degrees(-90))
             VStack(spacing: 1) {
-                Text(entry.overBudget ? "Over" : "Left")
+                Text(entry.overBudget ? LocalizedStringKey("Widget.Ring.Over") : LocalizedStringKey("Widget.Ring.Left"))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Text((entry.overBudget ? -entry.remaining : entry.remaining).compactCurrencyString)

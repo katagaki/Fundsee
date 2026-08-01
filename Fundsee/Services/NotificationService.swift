@@ -26,11 +26,11 @@ enum NotificationService {
             var components = DateComponents()
             components.hour = hour
             let content = UNMutableNotificationContent()
-            content.title = "Daily Report"
+            content.title = String(localized: "Notification.Daily.Title", defaultValue: "Daily Report")
             let remaining = engine.remaining(for: .now)
             content.body = remaining >= 0
-                ? "You have \(remaining.currencyString) left today. Tap to review your day."
-                : "You're \((-remaining).currencyString) over today's budget. Tap to review your day."
+                ? String(localized: "Notification.Daily.Body.Left", defaultValue: "You have \(remaining.currencyString) left today. Tap to review your day.")
+                : String(localized: "Notification.Daily.Body.Over", defaultValue: "You're \((-remaining).currencyString) over today's budget. Tap to review your day.")
             content.sound = .default
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
             try? await center.add(UNNotificationRequest(identifier: dailyID, content: content, trigger: trigger))
@@ -41,11 +41,11 @@ enum NotificationService {
             components.weekday = 1 // Sunday
             components.hour = 20
             let content = UNMutableNotificationContent()
-            content.title = "Weekly Report"
+            content.title = String(localized: "Notification.Weekly.Title", defaultValue: "Weekly Report")
             let week = engine.weekInterval(containing: .now)
             let budget = engine.weekBudget(containing: .now)
             let used = engine.spent(in: week)
-            content.body = "This week: \(used.currencyString) of \(budget.currencyString) used. Tap for the full picture."
+            content.body = String(localized: "Notification.Weekly.Body", defaultValue: "This week: \(used.currencyString) of \(budget.currencyString) used. Tap for the full picture.")
             content.sound = .default
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
             try? await center.add(UNNotificationRequest(identifier: weeklyID, content: content, trigger: trigger))
@@ -56,8 +56,8 @@ enum NotificationService {
             components.day = 1
             components.hour = 9
             let content = UNMutableNotificationContent()
-            content.title = "Monthly Report"
-            content.body = "A new month begins. See how last month went and what's budgeted ahead."
+            content.title = String(localized: "Notification.Monthly.Title", defaultValue: "Monthly Report")
+            content.body = String(localized: "Notification.Monthly.Body", defaultValue: "A new month begins. See how last month went and what's budgeted ahead.")
             content.sound = .default
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
             try? await center.add(UNNotificationRequest(identifier: monthlyID, content: content, trigger: trigger))

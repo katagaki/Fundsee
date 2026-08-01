@@ -1,4 +1,5 @@
 import SwiftUI
+
 /// HIG system-color mapping for category symbols.
 enum CategoryIconPalette {
     static func color(for iconName: String) -> Color {
@@ -20,8 +21,4 @@ enum CategoryIconPalette {
         default: .gray
         }
     }
-}
-
-extension TemplateCategory {
-    var iconColor: Color { CategoryIconPalette.color(for: iconName) }
 }

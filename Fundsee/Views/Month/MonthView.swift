@@ -41,10 +41,11 @@ struct MonthView: View {
             }
             .listStyle(.plain)
             .navigationTitle(referenceDate.formatted(.dateTime.month(.wide).year()))
+            .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
-                    Button("Previous Month", systemImage: "chevron.left") { monthOffset -= 1 }
-                    Button("Next Month", systemImage: "chevron.right") { monthOffset += 1 }
+                    Button("Month.Previous", systemImage: "chevron.left") { monthOffset -= 1 }
+                    Button("Month.Next", systemImage: "chevron.right") { monthOffset += 1 }
                 }
             }
         }
@@ -57,15 +58,15 @@ struct MonthView: View {
         let used = engine.spent(in: month)
         return Section {
             VStack(spacing: 12) {
-            BudgetRingView(used: used, budget: budget, centerCaption: "of \(budget.currencyString) this month")
+            BudgetRingView(used: used, budget: budget, centerCaption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"))
                 .frame(height: 200)
             HStack {
-                StatBlock(title: "Budget", amount: budget)
-                StatBlock(title: "Used", amount: used)
-                StatBlock(title: "Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
+                StatBlock(title: "Stat.Budget", amount: budget)
+                StatBlock(title: "Stat.Used", amount: used)
+                StatBlock(title: "Stat.Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
             }
             if engine.monthlyExtra > 0 {
-                Text("Includes \(engine.monthlyExtra.currencyString) monthly overall budget")
+                Text(String(localized: "Month.IncludesMonthlyExtra", defaultValue: "Includes \(engine.monthlyExtra.currencyString) monthly overall budget"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -76,61 +77,49 @@ struct MonthView: View {
         .listRowSeparator(.hidden)
     }
 
+    /// Built eagerly, one row per week. A `LazyVGrid` here reports an unstable
+    /// height to the enclosing `List`, which blocks scrolling past the calendar
+    /// and makes the week band stutter as it moves.
     private var calendarSection: some View {
         let engine = self.engine
         let calendar = Calendar.current
         let month = engine.monthInterval(containing: referenceDate)
-        let days = engine.days(in: month)
-        let firstWeekday = calendar.component(.weekday, from: month.start)
-        let leading = (firstWeekday - calendar.firstWeekday + 7) % 7
+        let weeks = engine.weeks(inMonthContaining: referenceDate)
         let symbols = orderedWeekdaySymbols(calendar)
         let today = calendar.startOfDay(for: .now)
-        let shownWeek = self.shownWeek
+        let shownWeekStart = shownWeek.start
 
         return Section {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 6) {
-                ForEach(Array(symbols.enumerated()), id: \.offset) { _, symbol in
-                    Text(symbol)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(0..<leading, id: \.self) { index in
-                    // Leading blanks are part of the first week: band them when selected.
-                    Color.clear
-                        .frame(height: 48)
-                        .background(bandShape(isFirst: index == 0, isLast: false)
-                            .fill(days.first.map { Self.week(shownWeek, contains: $0) } == true ? Color.accentColor.opacity(0.12) : .clear))
-                }
-                ForEach(days, id: \.self) { day in
-                    let used = engine.spent(on: day)
-                    let budget = engine.effectiveBudget(for: day)
-                    let weekday = calendar.component(.weekday, from: day)
-                    let position = (weekday - calendar.firstWeekday + 7) % 7
-                    let inShownWeek = Self.week(shownWeek, contains: day)
-                    Button {
-                        withAnimation(.snappy) {
-                            selectedWeekStart = engine.weekInterval(containing: day).start
-                        }
-                    } label: {
-                        VStack(spacing: 3) {
-                            Text(day.formatted(.dateTime.day()))
-                                .font(.caption.weight(day == today ? .heavy : .medium))
-                                .foregroundStyle(day == today ? Color.accentColor : .primary)
-                            Circle()
-                                .fill(dayColor(used: used, budget: budget, day: day, today: today))
-                                .frame(width: 6, height: 6)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .background(
-                            bandShape(
-                                isFirst: position == 0 || day == days.first,
-                                isLast: position == 6 || day == days.last
-                            )
-                            .fill(inShownWeek ? Color.accentColor.opacity(0.12) : .clear)
-                        )
-                        .contentShape(.rect)
+            VStack(spacing: 2) {
+                HStack(spacing: 0) {
+                    ForEach(Array(symbols.enumerated()), id: \.offset) { _, symbol in
+                        Text(symbol)
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.plain)
+                }
+                .padding(.bottom, 4)
+
+                ForEach(weeks, id: \.start) { week in
+                    HStack(spacing: 0) {
+                        ForEach(engine.days(in: week), id: \.self) { day in
+                            dayCell(
+                                day,
+                                inMonth: Self.week(month, contains: day),
+                                engine: engine,
+                                today: today
+                            )
+                        }
+                    }
+                    .background(
+                        Capsule()
+                            .fill(Color.accentColor.opacity(week.start == shownWeekStart ? 0.12 : 0))
+                    )
+                    .contentShape(.rect)
+                    .onTapGesture {
+                        withAnimation(.snappy) { selectedWeekStart = week.start }
+                    }
                 }
             }
             .padding(.vertical, 6)
@@ -139,6 +128,36 @@ struct MonthView: View {
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets())
         }
+    }
+
+    /// One calendar cell. Days spilling in from the neighboring month keep their
+    /// slot so the grid stays aligned, but render empty.
+    @ViewBuilder
+    private func dayCell(_ day: Date, inMonth: Bool, engine: BudgetEngine, today: Date) -> some View {
+        Group {
+            if inMonth {
+                VStack(spacing: 3) {
+                    // Bare number, not `.dateTime.day()`: that renders "1日" in
+                    // Japanese and "1일" in Korean, which is too wide for a grid cell.
+                    Text(Calendar.current.component(.day, from: day), format: .number.grouping(.never))
+                        .font(.caption.weight(day == today ? .heavy : .medium))
+                        .foregroundStyle(day == today ? Color.accentColor : .primary)
+                    Circle()
+                        .fill(
+                            dayColor(
+                                used: engine.spent(on: day),
+                                budget: engine.effectiveBudget(for: day),
+                                day: day,
+                                today: today
+                            )
+                        )
+                        .frame(width: 6, height: 6)
+                }
+            } else {
+                Color.clear
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 48)
     }
 
     private var selectedWeekSection: some View {
@@ -152,16 +171,16 @@ struct MonthView: View {
                     Text(weekTitle(week))
                         .font(.subheadline.weight(.semibold))
                     Spacer()
-                    Text("\(used.currencyString) / \(budget.currencyString)")
+                    Text(verbatim: "\(used.currencyString) / \(budget.currencyString)")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(used > budget ? .red : .primary)
                         .contentTransition(.numericText())
                 }
                 UsageBar(used: used, budget: budget)
                 HStack {
-                    StatBlock(title: "Budget", amount: budget)
-                    StatBlock(title: "Used", amount: used)
-                    StatBlock(title: "Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
+                    StatBlock(title: "Stat.Budget", amount: budget)
+                    StatBlock(title: "Stat.Used", amount: used)
+                    StatBlock(title: "Stat.Remaining", amount: budget - used, tint: budget - used < 0 ? .red : .primary)
                 }
             }
             .padding(.vertical, 6)
@@ -178,17 +197,17 @@ struct MonthView: View {
                     let budget = engine.weekBudget(containing: week.start, includeCarry: false)
                     let used = engine.spent(in: week)
                     BarMark(
-                        x: .value("Week", "W\(index + 1)"),
-                        yStart: .value("Budget", 0),
-                        yEnd: .value("Budget", budget.doubleValue),
+                        x: .value("Chart.Axis.Week", String(localized: "Month.Chart.WeekLabel", defaultValue: "W\(index + 1)")),
+                        yStart: .value("Chart.Series.Budget", 0),
+                        yEnd: .value("Chart.Series.Budget", budget.doubleValue),
                         width: .ratio(0.72)
                     )
                     .foregroundStyle(Color.gray.opacity(0.18))
                     .cornerRadius(5)
                     BarMark(
-                        x: .value("Week", "W\(index + 1)"),
-                        yStart: .value("Spent", 0),
-                        yEnd: .value("Spent", used.doubleValue),
+                        x: .value("Chart.Axis.Week", String(localized: "Month.Chart.WeekLabel", defaultValue: "W\(index + 1)")),
+                        yStart: .value("Chart.Series.Spent", 0),
+                        yEnd: .value("Chart.Series.Spent", used.doubleValue),
                         width: .ratio(0.45)
                     )
                     .foregroundStyle(
@@ -205,25 +224,16 @@ struct MonthView: View {
         }
     }
 
+    private func weekTitle(_ week: DateInterval) -> String {
+        let calendar = Calendar.current
+        let lastDay = calendar.date(byAdding: .day, value: -1, to: week.end) ?? week.end
+        return (week.start..<lastDay).formatted(.interval.month(.abbreviated).day())
+    }
+
     /// `DateInterval.contains` includes the end boundary; that would leak
     /// the next week's first day into the band.
     private static func week(_ week: DateInterval, contains day: Date) -> Bool {
         day >= week.start && day < week.end
-    }
-
-    /// Capsule-ended highlight band (cells are 48pt tall).
-    private func bandShape(isFirst: Bool, isLast: Bool) -> UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            topLeadingRadius: isFirst ? 24 : 0,
-            bottomLeadingRadius: isFirst ? 24 : 0,
-            bottomTrailingRadius: isLast ? 24 : 0,
-            topTrailingRadius: isLast ? 24 : 0
-        )
-    }
-
-    private func weekTitle(_ week: DateInterval) -> String {
-        let end = Calendar.current.date(byAdding: .day, value: -1, to: week.end) ?? week.end
-        return "\(week.start.formatted(.dateTime.month(.abbreviated).day())) – \(end.formatted(.dateTime.month(.abbreviated).day()))"
     }
 
     private func dayColor(used: Decimal, budget: Decimal, day: Date, today: Date) -> Color {

@@ -33,10 +33,11 @@ struct YearView: View {
             }
             .listStyle(.plain)
             .navigationTitle(referenceDate.formatted(.dateTime.year()))
+            .toolbarTitleDisplayMode(.inlineLarge)
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
-                    Button("Previous Year", systemImage: "chevron.left") { yearOffset -= 1 }
-                    Button("Next Year", systemImage: "chevron.right") { yearOffset += 1 }
+                    Button("Year.Previous", systemImage: "chevron.left") { yearOffset -= 1 }
+                    Button("Year.Next", systemImage: "chevron.right") { yearOffset += 1 }
                 }
             }
         }
@@ -56,18 +57,18 @@ struct YearView: View {
         let balance = budget - used
         return Section {
             VStack(spacing: 8) {
-            Text(balance >= 0 ? "+\(balance.currencyString)" : balance.currencyString)
+            Text(verbatim: balance >= 0 ? "+\(balance.currencyString)" : balance.currencyString)
                 .font(.system(size: 40, weight: .bold, design: .rounded))
                 .foregroundStyle(balance >= 0 ? Color.green : Color.red)
                 .contentTransition(.numericText())
             Text(balance >= 0
-                 ? "You've spent less than budgeted so far this year."
-                 : "You've spent more than budgeted so far this year.")
+                 ? LocalizedStringKey("Year.Summary.Under")
+                 : LocalizedStringKey("Year.Summary.Over"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             HStack {
-                StatBlock(title: "Budgeted", amount: budget)
-                StatBlock(title: "Spent", amount: used)
+                StatBlock(title: "Stat.Budgeted", amount: budget)
+                StatBlock(title: "Stat.Spent", amount: used)
             }
             .padding(.top, 6)
             }
@@ -84,17 +85,17 @@ struct YearView: View {
                     let budget = engine.monthBudget(containing: month)
                     let used = engine.spent(in: engine.monthInterval(containing: month))
                     BarMark(
-                        x: .value("Month", month, unit: .month),
-                        yStart: .value("Budget", 0),
-                        yEnd: .value("Budget", budget.doubleValue),
+                        x: .value("Chart.Axis.Month", month, unit: .month),
+                        yStart: .value("Chart.Series.Budget", 0),
+                        yEnd: .value("Chart.Series.Budget", budget.doubleValue),
                         width: .ratio(0.72)
                     )
                     .foregroundStyle(Color.gray.opacity(0.18))
                     .cornerRadius(4)
                     BarMark(
-                        x: .value("Month", month, unit: .month),
-                        yStart: .value("Spent", 0),
-                        yEnd: .value("Spent", used.doubleValue),
+                        x: .value("Chart.Axis.Month", month, unit: .month),
+                        yStart: .value("Chart.Series.Spent", 0),
+                        yEnd: .value("Chart.Series.Spent", used.doubleValue),
                         width: .ratio(0.45)
                     )
                     .foregroundStyle(used > budget ? Color.red : Color.accentColor)
@@ -122,7 +123,7 @@ struct YearView: View {
                         .font(.subheadline.weight(.medium))
                     Spacer()
                     VStack(alignment: .trailing, spacing: 4) {
-                        Text("\(used.currencyString) / \(budget.currencyString)")
+                        Text(verbatim: "\(used.currencyString) / \(budget.currencyString)")
                             .font(.caption.weight(.medium))
                             .foregroundStyle(used > budget ? .red : .secondary)
                         UsageBar(used: used, budget: budget)

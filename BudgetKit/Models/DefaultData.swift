@@ -1,0 +1,128 @@
+import Foundation
+import SwiftData
+
+enum DefaultData {
+    /// Seeded names are stored in the database, so they are translated once at
+    /// creation time and then belong to the user like any name they typed.
+    static var categoryNames: [String] {
+        [
+            String(localized: "Seed.Category.Breakfast", defaultValue: "Breakfast"),
+            String(localized: "Seed.Category.Lunch", defaultValue: "Lunch"),
+            String(localized: "Seed.Category.Dinner", defaultValue: "Dinner"),
+            String(localized: "Seed.Category.Beverages", defaultValue: "Beverages"),
+            String(localized: "Seed.Category.Entertainment", defaultValue: "Entertainment"),
+        ]
+    }
+
+    /// The untranslated names seeded before this data was localized. Only the
+    /// icon backfill below needs them, and it has to match what is on disk.
+    private static let originalCategoryNames = ["Breakfast", "Lunch", "Dinner", "Beverages", "Entertainment"]
+
+    static let categoryIcons = ["sunrise.fill", "takeoutbag.and.cup.and.straw.fill", "fork.knife", "cup.and.saucer.fill", "gamecontroller.fill"]
+
+    struct TemplateSeed {
+        let name: String
+        let iconName: String
+        let amounts: [Decimal]
+    }
+
+    static var templates: [TemplateSeed] {
+        [
+            TemplateSeed(name: String(localized: "Seed.Template.Office", defaultValue: "Working from Office"), iconName: "building.2.fill", amounts: [6, 14, 16, 6, 5]),
+            TemplateSeed(name: String(localized: "Seed.Template.Home", defaultValue: "Working from Home"), iconName: "house.fill", amounts: [4, 9, 14, 3, 5]),
+            TemplateSeed(name: String(localized: "Seed.Template.NotWorking", defaultValue: "Not Working"), iconName: "sofa.fill", amounts: [6, 12, 16, 5, 12]),
+        ]
+    }
+
+    /// Indices into `templates` / `seeded`, used instead of matching on names
+    /// now that the names are translated.
+    private enum Seed: Int {
+        case office = 0, home = 1, notWorking = 2
+    }
+
+    @MainActor
+    static func seedIfNeeded(context: ModelContext) {
+        let templateCount = (try? context.fetchCount(FetchDescriptor<BudgetTemplate>())) ?? 0
+        var seeded: [BudgetTemplate] = []
+        if templateCount == 0 {
+            let names = categoryNames
+            for seed in templates {
+                let template = BudgetTemplate(name: seed.name, iconName: seed.iconName)
+                context.insert(template)
+                for (index, name) in names.enumerated() {
+                    let category = TemplateCategory(name: name, amount: seed.amounts[index], sortOrder: index, iconName: categoryIcons[index])
+                    category.template = template
+                    context.insert(category)
+                }
+                seeded.append(template)
+            }
+        }
+
+        // Backfill icons for categories created before the iconName field existed.
+        let defaultIcons = Dictionary(uniqueKeysWithValues: zip(originalCategoryNames, categoryIcons))
+        let allCategories = (try? context.fetch(FetchDescriptor<TemplateCategory>())) ?? []
+        for category in allCategories where category.iconName == "tag.fill" {
+            if let icon = defaultIcons[category.name] {
+                category.iconName = icon
+            }
+        }
+
+        let settingsCount = (try? context.fetchCount(FetchDescriptor<PlanSettings>())) ?? 0
+        if settingsCount == 0 {
+            let settings = PlanSettings()
+            if seeded.indices.contains(Seed.notWorking.rawValue) {
+                let office = seeded[Seed.office.rawValue]
+                let off = seeded[Seed.notWorking.rawValue]
+                settings.setTemplateUUID(off.uuid, forWeekday: 1)      // Sunday
+                for weekday in 2...6 {                                 // Monday–Friday
+                    settings.setTemplateUUID(office.uuid, forWeekday: weekday)
+                }
+                settings.setTemplateUUID(off.uuid, forWeekday: 7)      // Saturday
+            }
+            context.insert(settings)
+        }
+        try? context.save()
+    }
+
+    /// Debug helper (`-seedSampleData YES`): fills the past four months,
+    /// never touching today or days that already have entries.
+    @MainActor
+    static func seedSampleDataIfRequested(context: ModelContext) {
+        guard UserDefaults.standard.bool(forKey: "seedSampleData") else { return }
+        let existingEntries = (try? context.fetch(FetchDescriptor<SpendEntry>())) ?? []
+
+        let templates = (try? context.fetch(FetchDescriptor<BudgetTemplate>())) ?? []
+        let settings = (try? context.fetch(FetchDescriptor<PlanSettings>()))?.first
+        let engine = BudgetEngine(templates: templates, overrides: [], entries: [], settings: settings)
+
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        let daysWithData = Set(existingEntries.map { calendar.startOfDay(for: $0.dayKey) })
+        guard let start = calendar.date(byAdding: .month, value: -4, to: today) else { return }
+
+        var day = start
+        while day < today {
+            if daysWithData.contains(day) {
+                guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+                day = next
+                continue
+            }
+            if let template = engine.template(for: day) {
+                for category in template.sortedCategories {
+                    // Skip the odd category so the data looks lived-in rather than mechanical.
+                    if Int.random(in: 0..<10) == 0 { continue }
+                    let factor = Double.random(in: 0.55...1.3)
+                    let total = (category.amount.doubleValue * factor).rounded()
+                    guard total > 0 else { continue }
+                    let entry = SpendEntry(dayKey: day, categoryName: category.name, amount: Decimal(total))
+                    let hour = 8 + category.sortOrder * 3
+                    entry.timestamp = calendar.date(bySettingHour: min(hour, 21), minute: Int.random(in: 0..<60), second: 0, of: day) ?? day
+                    context.insert(entry)
+                }
+            }
+            guard let next = calendar.date(byAdding: .day, value: 1, to: day) else { break }
+            day = next
+        }
+        try? context.save()
+    }
+}

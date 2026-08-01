@@ -156,6 +156,18 @@ struct BudgetRingView: View {
         if let first = stops.first, let last = stops.last {
             stops.insert(.init(color: first.color, location: start), at: 0)
             stops.append(.init(color: last.color, location: end))
+            // A round cap overhangs its end of the arc by half the ring's width,
+            // and the sweep wraps at twelve o'clock, so the start cap would pick
+            // up the color from the far end. Hold each end's color across the
+            // overhang and hand back to the first color before the seam.
+            stops.insert(.init(color: first.color, location: 0), at: 0)
+            let capOverhang = 0.06
+            if end + capOverhang < 1 {
+                stops.append(.init(color: last.color, location: end + capOverhang))
+                stops.append(.init(color: first.color, location: 1))
+            } else {
+                stops.append(.init(color: last.color, location: 1))
+            }
         }
 
         return AnyShapeStyle(

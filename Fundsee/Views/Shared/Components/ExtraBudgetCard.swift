@@ -77,7 +77,6 @@ struct ExtraBudgetCard: View {
         Button(action: action) {
             VStack(spacing: 10) {
                 HStack(spacing: 12) {
-                    RoundRectIcon(systemImage: "basket.fill")
                     VStack(alignment: .leading, spacing: 2) {
                         Text(kind.title)
                             .font(.subheadline.weight(.semibold))

@@ -112,7 +112,7 @@ struct TodayView: View {
         Section {
             ExtraBudgetCards(engine: engine, date: today, namespace: cardZoom, inputCategory: $inputCategory)
                 .padding(.horizontal, 16)
-                .padding(.top, 12)
+                .padding(.top, 10)
         }
         .listRowBackground(Color.clear)
         .listRowInsets(EdgeInsets())

@@ -41,3 +41,5 @@ Simulator tap injection is broken (SimulatorKit is missing under the Xcode-beta 
 - `-hasCompletedOnboarding YES`, `-onboardingStep N`, `-initialTab today|week|month|year|more`
 - `-seedSampleData YES` fills the past 4 months with plausible entries; it skips today and any day that already has data, so it is safe on real data.
 - `-AppleLanguages "(ja)"` (or `ko`, `zh-Hans`, `zh-Hant`) launches in that language, which is how the CJK layouts get checked.
+
+`simctl uninstall` does **not** clear the data. The store lives in the App Group container (`group.com.tsubuzaki.Fundsee`), which survives uninstall; only `hasCompletedOnboarding` and friends go with the app container, so the app looks freshly installed while still holding old plans. To actually reset, delete `Library/Application Support/default.store*` from the group container under `~/Library/Developer/CoreSimulator/Devices/<device>/data/Containers/Shared/AppGroup/`.

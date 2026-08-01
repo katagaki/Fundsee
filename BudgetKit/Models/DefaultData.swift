@@ -85,6 +85,14 @@ enum DefaultData {
         try? context.save()
     }
 
+    /// Sample-data amounts, keyed by icon because names are localized.
+    /// Ordered like `categoryNames`.
+    private static let sampleAmounts: [String: [Decimal]] = [
+        "building.2.fill": [8, 15, 20, 6, 5],
+        "house.fill": [6, 8, 18, 4, 5],
+        "sofa.fill": [7, 12, 22, 5, 15],
+    ]
+
     /// Debug helper (`-seedSampleData YES`): fills the past four months,
     /// never touching today or days that already have entries.
     @MainActor
@@ -93,6 +101,16 @@ enum DefaultData {
         let existingEntries = (try? context.fetch(FetchDescriptor<SpendEntry>())) ?? []
 
         let templates = (try? context.fetch(FetchDescriptor<BudgetTemplate>())) ?? []
+
+        // Only untouched amounts, so plans the user has priced keep their numbers.
+        for template in templates {
+            guard let amounts = sampleAmounts[template.iconName] else { continue }
+            for category in template.sortedCategories where category.amount == 0 {
+                guard category.sortOrder < amounts.count else { continue }
+                category.amount = amounts[category.sortOrder]
+            }
+        }
+
         let settings = (try? context.fetch(FetchDescriptor<PlanSettings>()))?.first
         let engine = BudgetEngine(templates: templates, overrides: [], entries: [], settings: settings)
 

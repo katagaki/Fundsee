@@ -1,8 +1,8 @@
 {
   "fill" : {
     "linear-gradient" : [
-      "srgb:0.97993,1.00000,0.90441,1.00000",
-      "display-p3:0.87391,1.00000,0.47041,1.00000"
+      "srgb:0.18299,0.40641,0.00000,1.00000",
+      "display-p3:0.12798,0.17969,0.07777,1.00000"
     ]
   },
   "groups" : [
@@ -13,7 +13,7 @@
           "fill-specializations" : [
             {
               "value" : {
-                "automatic-gradient" : "srgb:1.00000,0.83922,0.00000,1.00000"
+                "automatic-gradient" : "srgb:1.00000,0.98463,0.00000,1.00000"
               }
             },
             {
@@ -23,19 +23,33 @@
           ],
           "image-name" : "slice.svg",
           "name" : "slice",
-          "position" : {
-            "scale" : 1,
-            "translation-in-points" : [
-              27.8359375,
-              -28.890625
-            ]
-          }
+          "position-specializations" : [
+            {
+              "value" : {
+                "scale" : 1,
+                "translation-in-points" : [
+                  27.8359375,
+                  -28.890625
+                ]
+              }
+            },
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.47,
+                "translation-in-points" : [
+                  -78.9561616774397,
+                  120.07913248489228
+                ]
+              }
+            }
+          ]
         },
         {
           "fill-specializations" : [
             {
               "value" : {
-                "automatic-gradient" : "srgb:0.00000,0.56863,1.00000,1.00000"
+                "automatic-gradient" : "srgb:0.44370,1.00000,0.43487,1.00000"
               }
             },
             {
@@ -44,12 +58,24 @@
             }
           ],
           "image-name" : "body.svg",
-          "name" : "body"
+          "name" : "body",
+          "position-specializations" : [
+            {
+              "idiom" : "square",
+              "value" : {
+                "scale" : 1.4,
+                "translation-in-points" : [
+                  -128.57968099230402,
+                  169.89587926684715
+                ]
+              }
+            }
+          ]
         }
       ],
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.5
+        "opacity" : 1.2
       },
       "translucency" : {
         "enabled" : true,

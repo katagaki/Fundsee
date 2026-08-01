@@ -28,7 +28,7 @@ struct OnboardingView: View {
                 if step > 0 {
                     ToolbarItem(placement: .topBarLeading) {
                         Button {
-                            withAnimation(.snappy) { step -= 1 }
+                            withAnimation(.standard) { step -= 1 }
                         } label: {
                             Image(systemName: "chevron.backward")
                         }
@@ -55,7 +55,7 @@ struct OnboardingView: View {
                 if step == stepCount - 1 {
                     hasCompletedOnboarding = true
                 } else {
-                    withAnimation(.snappy) { step += 1 }
+                    withAnimation(.standard) { step += 1 }
                 }
             } label: {
                 Text(step == stepCount - 1 ? LocalizedStringKey("Onboarding.Start") : LocalizedStringKey("Onboarding.Continue"))

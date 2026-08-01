@@ -23,6 +23,14 @@ struct SpendInputSheet: View {
         }
     }
 
+    private var recordedTitle: String {
+        if date.isToday {
+            return String(localized: "Common.TodaysSpend", defaultValue: "Today's Spend")
+        }
+        let day = date.formatted(.dateTime.month(.abbreviated).day())
+        return String(localized: "Common.SpendOnDate", defaultValue: "Spend on \(day)")
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -33,7 +41,7 @@ struct SpendInputSheet: View {
                 }
 
                 if !recordedEntries.isEmpty {
-                    Section("Common.Recorded") {
+                    Section(recordedTitle) {
                         ForEach(recordedEntries) { entry in
                             HStack {
                                 Text(entry.timestamp.formatted(date: .omitted, time: .shortened))

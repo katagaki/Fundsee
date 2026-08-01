@@ -2,6 +2,8 @@ import SwiftUI
 
 /// One pill of the horizontal week calendar: weekday, date, status dot.
 struct WeekDayPill: View {
+    static let selectionID = "WeekDayPill.selection"
+
     enum Status {
         case empty, under, over
 
@@ -17,6 +19,7 @@ struct WeekDayPill: View {
     let day: Date
     let isSelected: Bool
     let status: Status
+    let selectionNamespace: Namespace.ID
 
     var body: some View {
         VStack(spacing: 6) {
@@ -27,7 +30,13 @@ struct WeekDayPill: View {
                 .font(.callout.weight(day.isToday || isSelected ? .bold : .regular))
                 .foregroundStyle(isSelected ? Color.black : (day.isToday ? Color.accentColor : .primary))
                 .frame(width: 36, height: 36)
-                .background(isSelected ? Color.accentColor : Color.clear, in: .circle)
+                .background {
+                    if isSelected {
+                        Circle()
+                            .fill(Color.accentColor)
+                            .matchedGeometryEffect(id: Self.selectionID, in: selectionNamespace)
+                    }
+                }
             Circle()
                 .fill(status.color)
                 .frame(width: 5, height: 5)

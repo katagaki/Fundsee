@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// An overall budget drawn as its own arc inside the main ring.
+/// Spending against an overall budget, drawn as its own segment of the ring.
 struct ExtraArc: Equatable {
     var used: Decimal
     var budget: Decimal
@@ -33,29 +33,32 @@ struct BudgetRingView: View {
     private var overBudget: Bool { used > budget }
     private var remaining: Decimal { budget - used }
 
-    /// The main ring covers the plan only: what the inner arcs show is taken out.
-    private var planBudget: Decimal { budget - extraArcs.reduce(0) { $0 + $1.budget } }
+    /// Spending on the daily plans: what the overall-budget segments show is
+    /// already part of `used`, so it is taken out of the first segment.
     private var planUsed: Decimal { used - extraArcs.reduce(0) { $0 + $1.used } }
 
     var body: some View {
         GeometryReader { proxy in
             let size = min(proxy.size.width, proxy.size.height)
             let thickness = size * 0.14
-            let extraThickness = size * 0.05
-            let gap = size * 0.025
 
             ZStack {
-                planRing(thickness: thickness)
+                Circle()
+                    .inset(by: thickness / 2)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: thickness)
 
-                ForEach(Array(extraArcs.enumerated()), id: \.offset) { index, arc in
-                    let inset = thickness + gap + Double(index) * (extraThickness + gap)
-                    arcRing(
-                        used: arc.used,
-                        budget: arc.budget,
-                        style: AnyShapeStyle(arc.color),
-                        inset: inset,
-                        thickness: extraThickness
-                    )
+                if let carried = carriedFraction {
+                    Circle()
+                        .inset(by: thickness / 2)
+                        .trim(from: max(0, 1 - carried), to: 1)
+                        .stroke(Color.accentColor.opacity(0.3), lineWidth: thickness)
+                }
+
+                ForEach(Array(spans.enumerated()), id: \.offset) { _, span in
+                    Circle()
+                        .inset(by: thickness / 2)
+                        .trim(from: span.start, to: span.end)
+                        .stroke(span.style, style: StrokeStyle(lineWidth: thickness, lineCap: .round))
                 }
             }
             .rotationEffect(.degrees(-90))
@@ -80,61 +83,42 @@ struct BudgetRingView: View {
         }
     }
 
-    @ViewBuilder
-    private func planRing(thickness: Double) -> some View {
-        let fraction = fraction(used: planUsed, budget: planBudget)
-        let carried = max(Decimal(0), min(carryover, planBudget - planUsed))
-
-        ZStack {
-            Circle()
-                .inset(by: thickness / 2)
-                .stroke(Color.gray.opacity(0.2), lineWidth: thickness)
-
-            if carried > 0, planBudget > 0 {
-                let carriedFraction = carried.doubleValue / planBudget.doubleValue
-                Circle()
-                    .inset(by: thickness / 2)
-                    .trim(from: max(0, 1 - carriedFraction), to: 1)
-                    .stroke(Color.accentColor.opacity(0.3), lineWidth: thickness)
-            }
-
-            if fraction > 0 {
-                Circle()
-                    .inset(by: thickness / 2)
-                    .trim(from: 0, to: fraction)
-                    .stroke(spentStyle(fraction: fraction), style: StrokeStyle(lineWidth: thickness, lineCap: .round))
-            }
+    /// Consecutive stretches of the one ring: the plan's spending first, then a
+    /// segment per overall budget that has been spent against, each separated by
+    /// a small gap. All are measured against the same total budget.
+    private var spans: [(start: Double, end: Double, style: AnyShapeStyle)] {
+        guard budget > 0 else { return [] }
+        if overBudget {
+            return [(0, 1, AnyShapeStyle(Color.red))]
         }
+        let total = budget.doubleValue
+        let gap = 0.008
+        var result: [(start: Double, end: Double, style: AnyShapeStyle)] = []
+        var cursor = 0.0
+
+        let planFraction = min(1, max(0, planUsed.doubleValue / total))
+        if planFraction > 0 {
+            result.append((cursor, cursor + planFraction, spentStyle(fraction: planFraction)))
+            cursor += planFraction + gap
+        }
+        for arc in extraArcs where arc.used > 0 {
+            let share = min(1, max(0, arc.used.doubleValue / total))
+            guard cursor + share <= 1 else { break }
+            result.append((cursor, cursor + share, AnyShapeStyle(arc.color)))
+            cursor += share + gap
+        }
+        return result
     }
 
-    @ViewBuilder
-    private func arcRing(used: Decimal, budget: Decimal, style: AnyShapeStyle, inset: Double, thickness: Double) -> some View {
-        let fraction = fraction(used: used, budget: budget)
-        ZStack {
-            Circle()
-                .inset(by: inset + thickness / 2)
-                .stroke(Color.gray.opacity(0.15), lineWidth: thickness)
-            if fraction > 0 {
-                Circle()
-                    .inset(by: inset + thickness / 2)
-                    .trim(from: 0, to: fraction)
-                    .stroke(
-                        used > budget ? AnyShapeStyle(Color.red) : style,
-                        style: StrokeStyle(lineWidth: thickness, lineCap: .round)
-                    )
-            }
-        }
-    }
-
-    private func fraction(used: Decimal, budget: Decimal) -> Double {
-        guard budget > 0 else { return used > 0 ? 1 : 0 }
-        return min(1, max(0, used.doubleValue / budget.doubleValue))
+    private var carriedFraction: Double? {
+        let carried = max(Decimal(0), min(carryover, remaining))
+        guard carried > 0, budget > 0 else { return nil }
+        return carried.doubleValue / budget.doubleValue
     }
 
     /// Each category holds its color across its own share of the spent arc,
     /// blending only at the boundaries.
     private func spentStyle(fraction: Double) -> AnyShapeStyle {
-        if planUsed > planBudget { return AnyShapeStyle(Color.red) }
         let slices = spendPalette.filter { $0.weight > 0 }
         let total = slices.reduce(0) { $0 + $1.weight }
         guard slices.count > 1, total > 0 else {

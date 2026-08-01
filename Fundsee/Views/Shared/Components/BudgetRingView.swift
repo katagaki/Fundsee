@@ -40,22 +40,25 @@ struct BudgetRingView: View {
             let thickness = size * 0.14
 
             ZStack {
-                Circle()
-                    .inset(by: thickness / 2)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: thickness)
-
-                if let carried = carriedFraction {
-                    Circle()
-                        .inset(by: thickness / 2)
-                        .trim(from: max(0, 1 - carried), to: 1)
-                        .stroke(Color.accentColor.opacity(0.3), lineWidth: thickness)
-                }
-
                 ForEach(Array(spans.enumerated()), id: \.offset) { _, span in
                     Circle()
                         .inset(by: thickness / 2)
                         .trim(from: span.start, to: span.end)
-                        .stroke(span.style, style: StrokeStyle(lineWidth: thickness, lineCap: .round))
+                        .stroke(Color.gray.opacity(0.2), lineWidth: thickness)
+
+                    if let carried = span.carried {
+                        Circle()
+                            .inset(by: thickness / 2)
+                            .trim(from: carried, to: span.end)
+                            .stroke(Color.accentColor.opacity(0.3), lineWidth: thickness)
+                    }
+
+                    if let filled = span.filled {
+                        Circle()
+                            .inset(by: thickness / 2)
+                            .trim(from: span.start, to: filled)
+                            .stroke(span.style, style: StrokeStyle(lineWidth: thickness, lineCap: .round))
+                    }
                 }
             }
             .rotationEffect(.degrees(-90))
@@ -80,69 +83,87 @@ struct BudgetRingView: View {
         }
     }
 
-    /// Consecutive stretches of the one ring: the plan's spending first, then a
-    /// segment per overall budget that has been spent against, each separated by
-    /// a small gap. All are measured against the same total budget.
-    private var spans: [(start: Double, end: Double, style: AnyShapeStyle)] {
-        guard budget > 0 else { return [] }
-        if overBudget {
-            return [(0, 1, AnyShapeStyle(Color.red))]
-        }
-        let total = budget.doubleValue
-        let gap = 0.008
-        var result: [(start: Double, end: Double, style: AnyShapeStyle)] = []
-        var cursor = 0.0
+    private typealias Span = (start: Double, end: Double, filled: Double?, carried: Double?, style: AnyShapeStyle)
 
-        let planFraction = min(1, max(0, planUsed.doubleValue / total))
-        if planFraction > 0 {
-            result.append((cursor, cursor + planFraction, spentStyle(fraction: planFraction)))
-            cursor += planFraction + gap
+    /// The ring is divided by budget, not by spending: the daily plans take the
+    /// first stretch, and each overall budget owns the stretch after it, past
+    /// the plan's gray remainder. Every stretch fills from its own start.
+    private var spans: [Span] {
+        guard budget > 0 else { return [] }
+
+        let extras = extraArcs.filter { $0.budget > 0 }
+        let planBudget = budget - extras.reduce(0) { $0 + $1.budget }
+        var parts: [(budget: Decimal, used: Decimal, color: Color?, carryover: Decimal)] = []
+        if planBudget > 0 {
+            // nil color means the plan's own category gradient.
+            parts.append((planBudget, max(0, planUsed), nil, carryover))
         }
-        for arc in extraArcs where arc.used > 0 {
-            let share = min(1, max(0, arc.used.doubleValue / total))
-            guard cursor + share <= 1 else { break }
-            result.append((cursor, cursor + share, AnyShapeStyle(arc.color)))
-            cursor += share + gap
+        for arc in extras {
+            parts.append((arc.budget, arc.used, arc.color, 0))
+        }
+        guard !parts.isEmpty else { return [] }
+
+        let gap = parts.count > 1 ? 0.01 : 0
+        let scale = (1 - gap * Double(parts.count)) / budget.doubleValue
+        var result: [Span] = []
+        var cursor = gap / 2
+        for part in parts {
+            let span = part.budget.doubleValue * scale
+            let usedShare = min(1, max(0, part.used.doubleValue / part.budget.doubleValue))
+            let filled = usedShare > 0 ? cursor + span * usedShare : nil
+            let carried = max(Decimal(0), min(part.carryover, part.budget - part.used))
+            let style: AnyShapeStyle
+            if part.used > part.budget {
+                style = AnyShapeStyle(Color.red)
+            } else if let color = part.color {
+                style = AnyShapeStyle(color)
+            } else {
+                style = spentStyle(from: cursor, to: filled ?? cursor + span)
+            }
+            result.append((
+                start: cursor,
+                end: cursor + span,
+                filled: filled,
+                carried: carried > 0
+                    ? cursor + span * (1 - carried.doubleValue / part.budget.doubleValue)
+                    : nil,
+                style: style
+            ))
+            cursor += span + gap
         }
         return result
     }
 
-    private var carriedFraction: Double? {
-        let carried = max(Decimal(0), min(carryover, remaining))
-        guard carried > 0, budget > 0 else { return nil }
-        return carried.doubleValue / budget.doubleValue
-    }
-
     /// The spent arc runs through the category colors in share order, each at
     /// full strength over the middle of its own share.
-    private func spentStyle(fraction: Double) -> AnyShapeStyle {
+    private func spentStyle(from start: Double, to end: Double) -> AnyShapeStyle {
         let slices = spendPalette.filter { $0.weight > 0 }
         let total = slices.reduce(0) { $0 + $1.weight }
-        guard slices.count > 1, total > 0 else {
+        guard slices.count > 1, total > 0, end > start else {
             return AnyShapeStyle(slices.first?.color ?? .accentColor)
         }
 
         // One stop at the middle of each category's share, so the colors blend
-        // continuously across the arc instead of holding flat and stepping.
+        // continuously instead of holding flat and stepping at the seams. The
+        // shape spans the whole circle, so the stops are placed on that scale.
         var stops: [Gradient.Stop] = []
         var cursor = 0.0
         for slice in slices {
             let share = slice.weight / total
-            stops.append(.init(color: slice.color, location: cursor + share / 2))
+            stops.append(.init(color: slice.color, location: start + (cursor + share / 2) * (end - start)))
             cursor += share
         }
         if let first = stops.first, let last = stops.last {
-            stops.insert(.init(color: first.color, location: 0), at: 0)
-            stops.append(.init(color: last.color, location: 1))
+            stops.insert(.init(color: first.color, location: start), at: 0)
+            stops.append(.init(color: last.color, location: end))
         }
 
-        // The shape spans the whole circle, so the sweep is scaled to the arc.
         return AnyShapeStyle(
             AngularGradient(
                 stops: stops,
                 center: .center,
                 startAngle: .degrees(0),
-                endAngle: .degrees(360 * fraction)
+                endAngle: .degrees(360)
             )
         )
     }

@@ -37,7 +37,7 @@ struct BudgetRingView: View {
     var body: some View {
         GeometryReader { proxy in
             let size = min(proxy.size.width, proxy.size.height)
-            let thickness = size * 0.14
+            let thickness = size * 0.115
 
             // A round cap sticks out past the end of its arc by half the ring's
             // width; measured as a fraction of the circle, that is how far each

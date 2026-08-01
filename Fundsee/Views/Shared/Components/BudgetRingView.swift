@@ -27,9 +27,6 @@ struct BudgetRingView: View {
     /// Overall budgets folded into `used`/`budget`, each drawn as an inner arc.
     var extraArcs: [ExtraArc] = []
 
-    /// Fraction of each category's share given over to blending into its neighbors.
-    private static let boundaryBlend = 0.2
-
     private var overBudget: Bool { used > budget }
     private var remaining: Decimal { budget - used }
 
@@ -116,8 +113,8 @@ struct BudgetRingView: View {
         return carried.doubleValue / budget.doubleValue
     }
 
-    /// Each category holds its color across its own share of the spent arc,
-    /// blending only at the boundaries.
+    /// The spent arc runs through the category colors in share order, each at
+    /// full strength over the middle of its own share.
     private func spentStyle(fraction: Double) -> AnyShapeStyle {
         let slices = spendPalette.filter { $0.weight > 0 }
         let total = slices.reduce(0) { $0 + $1.weight }
@@ -125,14 +122,18 @@ struct BudgetRingView: View {
             return AnyShapeStyle(slices.first?.color ?? .accentColor)
         }
 
+        // One stop at the middle of each category's share, so the colors blend
+        // continuously across the arc instead of holding flat and stepping.
         var stops: [Gradient.Stop] = []
         var cursor = 0.0
         for slice in slices {
             let share = slice.weight / total
-            let blend = share * Self.boundaryBlend
-            stops.append(.init(color: slice.color, location: cursor + blend))
-            stops.append(.init(color: slice.color, location: cursor + share - blend))
+            stops.append(.init(color: slice.color, location: cursor + share / 2))
             cursor += share
+        }
+        if let first = stops.first, let last = stops.last {
+            stops.insert(.init(color: first.color, location: 0), at: 0)
+            stops.append(.init(color: last.color, location: 1))
         }
 
         // The shape spans the whole circle, so the sweep is scaled to the arc.

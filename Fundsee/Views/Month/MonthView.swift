@@ -71,6 +71,7 @@ struct MonthView: View {
             List {
                 summarySection
                 calendarSection
+                extraBudgetsSection
                 selectedWeekSection
                 chartSection
             }
@@ -96,6 +97,23 @@ struct MonthView: View {
         }
     }
 
+    private var extraBudgetsSection: some View {
+        Section {
+            ExtraBudgetCards(
+                engine: engine,
+                date: entryDate,
+                namespace: cardZoom,
+                spendTarget: $spendTarget,
+                kinds: [.monthly]
+            )
+            .padding(.horizontal, 16)
+            .padding(.top, 10)
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
+        .listRowSeparator(.hidden)
+    }
+
     private var summarySection: some View {
         let engine = self.engine
         let month = engine.monthInterval(containing: referenceDate)
@@ -111,13 +129,6 @@ struct MonthView: View {
                 extraArcs: monthExtraArcs(engine: engine, month: month)
             )
                 .frame(height: 200)
-            ExtraBudgetCards(
-                engine: engine,
-                date: entryDate,
-                namespace: cardZoom,
-                spendTarget: $spendTarget,
-                kinds: [.monthly]
-            )
             }
             .frame(maxWidth: .infinity)
         }

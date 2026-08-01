@@ -8,6 +8,8 @@ struct MonthView: View {
     @Query private var entries: [SpendEntry]
     @Query private var allSettings: [PlanSettings]
 
+    @Environment(\.colorScheme) private var colorScheme
+
     @State private var monthOffset = 0
     @State private var selectedWeekStart: Date?
     @Namespace private var weekSelection
@@ -166,7 +168,7 @@ struct MonthView: View {
                 // Japanese and "1일" in Korean, which is too wide for a grid cell.
                 Text(Calendar.current.component(.day, from: day), format: .number.grouping(.never))
                     .font(.callout.weight(day == today || isSelected ? .bold : .regular))
-                    .foregroundStyle(isSelected ? Color.black : (day == today ? Color.accentColor : .primary))
+                    .foregroundStyle(isSelected ? WeekDayPill.selectedForeground(colorScheme) : (day == today ? Color.accentColor : .primary))
             } else {
                 Color.clear
             }

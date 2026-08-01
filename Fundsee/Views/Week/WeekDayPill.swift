@@ -4,6 +4,13 @@ import SwiftUI
 struct WeekDayPill: View {
     static let selectionID = "WeekDayPill.selection"
 
+    /// Reads on the accent-filled selection circle in either appearance.
+    static func selectedForeground(_ colorScheme: ColorScheme) -> Color {
+        colorScheme == .light ? .white : .black
+    }
+
+    @Environment(\.colorScheme) private var colorScheme
+
     enum Status {
         case empty, under, over
 
@@ -28,7 +35,7 @@ struct WeekDayPill: View {
                 .foregroundStyle(isSelected ? .primary : .secondary)
             Text(Calendar.current.component(.day, from: day), format: .number.grouping(.never))
                 .font(.callout.weight(day.isToday || isSelected ? .bold : .regular))
-                .foregroundStyle(isSelected ? Color.black : (day.isToday ? Color.accentColor : .primary))
+                .foregroundStyle(isSelected ? Self.selectedForeground(colorScheme) : (day.isToday ? Color.accentColor : .primary))
                 .frame(width: 36, height: 36)
                 .background {
                     if isSelected {

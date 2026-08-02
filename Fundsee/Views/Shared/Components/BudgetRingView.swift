@@ -105,7 +105,7 @@ struct BudgetRingView: View {
         }
         guard !parts.isEmpty else { return [] }
 
-        let gap = parts.count > 1 ? 0.007 : 0
+        let gap = 0.007
         let available = 1 - gap * Double(parts.count)
         let minimum = min(available / Double(parts.count), 4 * cap)
         var widths = parts.map { $0.budget.doubleValue / budget.doubleValue * available }

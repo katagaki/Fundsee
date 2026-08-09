@@ -116,19 +116,16 @@ struct MonthView: View {
         let budget = engine.monthBudget(containing: referenceDate)
         let used = engine.spent(in: month)
         return Section {
-            VStack(spacing: 12) {
-            BudgetRingView(
+            BudgetSummaryHeader(
                 used: used,
                 budget: budget,
-                centerCaption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"),
+                caption: String(localized: "Ring.Caption.OfThisMonth", defaultValue: "of \(budget.currencyString) this month"),
                 spendPalette: engine.spendPalette(in: month),
                 extraArcs: monthExtraArcs(engine: engine, month: month)
             )
-                .frame(height: 200)
-            }
-            .frame(maxWidth: .infinity)
         }
         .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
         .listRowSeparator(.hidden)
     }
 

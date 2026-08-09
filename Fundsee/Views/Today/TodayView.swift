@@ -52,16 +52,13 @@ struct TodayView: View {
         let template = engine.template(for: today)
         let carryover = engine.carryover == .nextDay ? budget - engine.baseBudget(for: today) : 0
         return Section {
-            VStack(spacing: 12) {
-                BudgetRingView(
-                    used: used,
-                    budget: budget,
-                    centerCaption: String(localized: "Ring.Caption.Of", defaultValue: "of \(budget.currencyString)"),
-                    carryover: carryover,
-                    spendPalette: engine.spendPalette(on: today)
-                )
-                .frame(height: 200)
-
+            BudgetSummaryHeader(
+                used: used,
+                budget: budget,
+                caption: String(localized: "Ring.Caption.Of", defaultValue: "of \(budget.currencyString)"),
+                carryover: carryover,
+                spendPalette: engine.spendPalette(on: today)
+            ) {
                 HStack(spacing: 8) {
                     Image(systemName: template?.iconName ?? "questionmark.circle")
                     if let template {
@@ -73,9 +70,9 @@ struct TodayView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             }
-            .frame(maxWidth: .infinity)
         }
         .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets())
         .listRowSeparator(.hidden)
     }
 

@@ -13,6 +13,7 @@ struct BudgetRingView: View {
     var carryover: Decimal = 0
     var spendPalette: [SpendSlice] = []
     var extraArcs: [ExtraArc] = []
+    var showsLabel: Bool = true
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -26,7 +27,7 @@ struct BudgetRingView: View {
     var body: some View {
         GeometryReader { proxy in
             let size = min(proxy.size.width, proxy.size.height)
-            let thickness = size * 0.115
+            let thickness = size * 0.17
 
             let cap = (thickness / 2) / (.pi * (size - thickness))
 
@@ -72,20 +73,10 @@ struct BudgetRingView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .overlay {
-            VStack(spacing: 4) {
-                Text(overBudget ? LocalizedStringKey("Ring.OverBy") : LocalizedStringKey("Ring.Remaining"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text((overBudget ? used - budget : remaining).currencyString)
-                    .font(.system(.title, design: .rounded, weight: .bold))
-                    .foregroundStyle(overBudget ? .red : .primary)
-                    .contentTransition(.numericText())
-                Text(centerCaption)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+            if showsLabel {
+                BudgetRingLabel(used: used, budget: budget, caption: centerCaption, alignment: .center)
+                    .padding(.horizontal, 24)
             }
-            .padding(.horizontal, 24)
-            .multilineTextAlignment(.center)
         }
     }
 

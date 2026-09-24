@@ -38,7 +38,7 @@ struct MonthView: View {
             arcs.append(ExtraArc(used: engine.spent(in: month, scope: .month), budget: engine.monthlyExtra))
         }
         if engine.weeklyExtra > 0 {
-            let weeks = engine.weeks(inMonthContaining: month.start).count
+            let weeks = engine.weekStarts(in: month).count
             arcs.append(
                 ExtraArc(
                     used: engine.spent(in: month, scope: .week),

@@ -6,6 +6,26 @@ struct BudgetEngine {
     var entries: [SpendEntry]
     var settings: PlanSettings?
     var calendar: Calendar = .current
+    private var entriesByDay: [Date: [SpendEntry]]
+    private var overridesByDay: [Date: DayOverride]
+    private var templatesByUUID: [String: BudgetTemplate]
+
+    init(templates: [BudgetTemplate], overrides: [DayOverride], entries: [SpendEntry], settings: PlanSettings?, calendar: Calendar = .current) {
+        self.templates = templates
+        self.overrides = overrides
+        self.entries = entries
+        self.settings = settings
+        self.calendar = calendar
+        self.entriesByDay = Dictionary(grouping: entries) { calendar.startOfDay(for: $0.dayKey) }
+        self.overridesByDay = [:]
+        for override in overrides {
+            self.overridesByDay[calendar.startOfDay(for: override.dayKey)] = override
+        }
+        self.templatesByUUID = [:]
+        for template in templates where self.templatesByUUID[template.uuid] == nil {
+            self.templatesByUUID[template.uuid] = template
+        }
+    }
 
     var carryover: CarryoverBehavior { settings?.carryover ?? .leaveAsIs }
     var weeklyExtra: Decimal { settings?.weeklyOverallBudget ?? 0 }
@@ -39,7 +59,7 @@ struct BudgetEngine {
     // MARK: - Template resolution
 
     func override(for date: Date) -> DayOverride? {
-        overrides.last { calendar.isDate($0.dayKey, inSameDayAs: date) }
+        overridesByDay[day(date)]
     }
 
     func template(for date: Date) -> BudgetTemplate? {
@@ -48,17 +68,18 @@ struct BudgetEngine {
         }
         let weekday = calendar.component(.weekday, from: date)
         guard let uuid = settings?.templateUUID(forWeekday: weekday) else { return nil }
-        return templates.first { $0.uuid == uuid }
+        return templatesByUUID[uuid]
     }
 
     // MARK: - Spending
 
     func entries(on date: Date) -> [SpendEntry] {
-        entries.filter { $0.scope == .day && calendar.isDate($0.dayKey, inSameDayAs: date) }
+        (entriesByDay[day(date)] ?? []).filter { $0.scope == .day }
     }
 
     func entries(in interval: DateInterval) -> [SpendEntry] {
-        entries.filter { interval.contains($0.dayKey) && $0.dayKey < interval.end }
+        days(in: interval).flatMap { entriesByDay[$0] ?? [] }
+            .filter { $0.dayKey >= interval.start && $0.dayKey < interval.end }
     }
 
     func spent(on date: Date) -> Decimal {
@@ -113,6 +134,7 @@ struct BudgetEngine {
     }
 
     func recentAmounts(category: String, limit: Int = 3) -> [Decimal] {
+        guard limit > 0 else { return [] }
         var seen: [Decimal] = []
         for entry in entries.filter({ $0.categoryName == category }).sorted(by: { $0.timestamp > $1.timestamp }) {
             if !seen.contains(entry.amount) {
@@ -161,8 +183,11 @@ struct BudgetEngine {
     func monthBudget(containing date: Date) -> Decimal {
         let month = monthInterval(containing: date)
         let base = days(in: month).reduce(Decimal(0)) { $0 + baseBudget(for: $1) }
-        let weekStarts = days(in: month).filter { calendar.isDate($0, equalTo: weekInterval(containing: $0).start, toGranularity: .day) }
-        return base + monthlyExtra + weeklyExtra * Decimal(weekStarts.count)
+        return base + monthlyExtra + weeklyExtra * Decimal(weekStarts(in: month).count)
+    }
+
+    func weekStarts(in month: DateInterval) -> [Date] {
+        days(in: month).filter { weekInterval(containing: $0).start == $0 }
     }
 
     func monthBudgetToDate(containing date: Date, asOf reference: Date) -> Decimal {
@@ -170,8 +195,8 @@ struct BudgetEngine {
         let cutoff = day(reference)
         let elapsed = days(in: month).filter { $0 <= cutoff }
         let base = elapsed.reduce(Decimal(0)) { $0 + baseBudget(for: $1) }
-        let weekStarts = elapsed.filter { calendar.isDate($0, equalTo: weekInterval(containing: $0).start, toGranularity: .day) }
-        return base + monthlyExtra + weeklyExtra * Decimal(weekStarts.count)
+        let elapsedWeekStarts = weekStarts(in: month).filter { $0 <= cutoff }
+        return base + monthlyExtra + weeklyExtra * Decimal(elapsedWeekStarts.count)
     }
 
     func weeks(inMonthContaining date: Date) -> [DateInterval] {

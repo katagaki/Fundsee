@@ -48,7 +48,9 @@ struct SpendInputSheet: View {
                     Section(recordedTitle) {
                         ForEach(recordedEntries) { entry in
                             HStack {
-                                Text(entry.timestamp.formatted(date: .omitted, time: .shortened))
+                                Text(period == nil
+                                     ? entry.timestamp.formatted(date: .omitted, time: .shortened)
+                                     : entry.dayKey.formatted(date: .abbreviated, time: .omitted))
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                                 Spacer()

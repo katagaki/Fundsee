@@ -41,7 +41,7 @@ struct MonthView: View {
             let weeks = engine.weekStarts(in: month).count
             arcs.append(
                 ExtraArc(
-                    used: engine.spent(in: month, scope: .week),
+                    used: engine.weeklyExtraSpent(in: month),
                     budget: engine.weeklyExtra * Decimal(weeks),
                     color: .accentColor.opacity(0.6)
                 )

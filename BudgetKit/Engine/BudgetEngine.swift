@@ -190,6 +190,10 @@ struct BudgetEngine {
         days(in: month).filter { weekInterval(containing: $0).start == $0 }
     }
 
+    func weeklyExtraSpent(in month: DateInterval) -> Decimal {
+        weekStarts(in: month).reduce(Decimal(0)) { $0 + spent(in: weekInterval(containing: $1), scope: .week) }
+    }
+
     func monthBudgetToDate(containing date: Date, asOf reference: Date) -> Decimal {
         let month = monthInterval(containing: date)
         let cutoff = day(reference)

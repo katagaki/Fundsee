@@ -61,6 +61,22 @@ struct MoreView: View {
                         templatesExportURL = try? CSVExporter.exportTemplates(templates)
                     }
                 }
+
+                Section {
+                    Link(destination: URL(string: "https://github.com/katagaki/Fundsee")!) {
+                        HStack {
+                            SettingsLabel(
+                                title: "More.SourceCode",
+                                systemImage: "chevron.left.forwardslash.chevron.right",
+                                color: .gray
+                            )
+                            Spacer()
+                            Text(verbatim: "katagaki/Fundsee")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .tint(.primary)
+                }
             }
             .navigationTitle("More.Title")
             .toolbarTitleDisplayMode(.inlineLarge)
